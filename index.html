@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost and Found Board</title>
+    
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script src="_sdk/element_sdk.js"></script>
+    <script src="_sdk/data_sdk.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="mainUser.css">
+</head>
+
+<body class="h-full">
+    <div id="app" class="h-full overflow-auto">
+        <header class="sticky top-0 z-40">
+            <div class="max-w-6xl mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-[#f59e0b]">
+                            📋
+                        </div>
+                        <div>
+                            <h1 id="board-title" class="text-xl font-bold text-[#f8fafc]">Lost & Found Board</h1>
+                            <p id="school-name" class="text-sm text-[#94a3b8]">Senior High School</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="post-btn" onclick="togglePostPanel()" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 bg-[#22c55e] text-white">
+                            <span>➕</span> <span class="hidden sm:inline">Post Item</span>
+                        </button>
+                        <button id="admin-btn" onclick="toggleAdminPanel()" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 bg-[#f59e0b] text-[#0f172a]">
+                            <span>🔐</span> <span class="hidden sm:inline">Admin</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-6xl mx-auto px-4 py-6">
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div class="rounded-xl p-4 text-center bg-[#334155]">
+                    <p id="total-count" class="text-2xl font-bold text-[#f59e0b]">0</p>
+                    <p class="text-xs text-[#94a3b8]">Total Items</p>
+                </div>
+                <div class="rounded-xl p-4 text-center bg-[#334155]">
+                    <p id="lost-count" class="text-2xl font-bold text-[#ef4444]">0</p>
+                    <p class="text-xs text-[#94a3b8]">Lost</p>
+                </div>
+                <div class="rounded-xl p-4 text-center bg-[#334155]">
+                    <p id="found-count" class="text-2xl font-bold text-[#22c55e]">0</p>
+                    <p class="text-xs text-[#94a3b8]">Found</p>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                <button onclick="setFilter('all')" data-filter="all" class="filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#f59e0b] text-[#0f172a]"> All Items </button>
+                <button onclick="setFilter('lost')" data-filter="lost" class="filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 🔴 Lost </button>
+                <button onclick="setFilter('found')" data-filter="found" class="filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 🟢 Found </button>
+                <button onclick="setFilter('claimed')" data-filter="claimed" class="filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> ✅ Claimed </button>
+            </div>
+
+            <div id="items-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+
+            <div id="empty-state" class="hidden text-center py-16">
+                <div class="text-6xl mb-4">📭</div>
+                <h3 class="text-xl font-semibold mb-2 text-[#f8fafc]">No items yet</h3>
+                <p class="text-[#94a3b8]">Post something to the board!</p>
+            </div>
+
+            <div id="loading-state" class="text-center py-16">
+                <div class="inline-block w-8 h-8 border-4 rounded-full animate-spin border-[#f59e0b] border-t-transparent"></div>
+                <p class="mt-4 text-[#94a3b8]">Loading items...</p>
+            </div>
+        </main>
+
+        <div id="post-overlay" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/60" onclick="togglePostPanel()"></div>
+            <div class="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto animate-slide panel-container">
+                <div class="sticky top-0 p-4 border-b flex items-center justify-between panel-header">
+                    <h2 class="text-lg font-bold text-[#f8fafc]">➕ Report Item</h2>
+                    <button onclick="togglePostPanel()" class="w-8 h-8 rounded-lg flex items-center justify-center bg-[#334155] text-[#f8fafc]">✕</button>
+                </div>
+                <div class="p-4 space-y-4">
+                    <form id="user-post-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Type</label>
+                            <select id="user-type" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
+                                <option value="lost">🔴 I Lost Something</option>
+                                <option value="found">🟢 I Found Something</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">What is it?</label>
+                            <input type="text" id="user-name" required placeholder="e.g., Blue Water Bottle" class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Description</label>
+                            <textarea id="user-desc" required rows="2" class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 resize-none input-field"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Where?</label>
+                            <input type="text" id="user-location" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Your Name</label>
+                            <input type="text" id="user-contact" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Date</label>
+                            <input type="date" id="user-date" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
+                        </div>
+                        <button type="submit" id="user-submit-btn" class="w-full py-3 rounded-lg font-semibold bg-[#22c55e] text-white"> 📝 Post to Board </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-login-overlay" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/60" onclick="closeAdminLogin()"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+                <div class="bg-[#1e293b] rounded-lg p-6">
+                    <h2 class="text-lg font-bold mb-4 text-[#f8fafc]">🔐 Admin Login</h2>
+                    <form id="admin-login-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Username</label>
+                            <input type="text" id="admin-username" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Password</label>
+                            <div class="relative">
+                                <input type="password" id="admin-password" required class="w-full px-3 py-2 pr-10 rounded-lg border focus:outline-none focus:ring-2 input-field">
+                                <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-[#94a3b8] hover:text-[#f8fafc]">
+                                    👁️
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full py-3 rounded-lg font-semibold bg-[#f59e0b] text-[#0f172a]">Login</button>
+                    </form>
+                    <button onclick="closeAdminLogin()" class="mt-4 w-full py-2 rounded-lg font-medium bg-[#334155] text-[#f8fafc]">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+    <script>
+        let currentFilter = 'all';
+        let allItems = [];
+
+        function togglePostPanel() {
+            document.getElementById('post-overlay').classList.toggle('hidden');
+        }
+
+        function toggleAdminPanel() {
+            document.getElementById('admin-login-overlay').classList.remove('hidden');
+        }
+
+        function closeAdminLogin() {
+            document.getElementById('admin-login-overlay').classList.add('hidden');
+        }
+
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('admin-password');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+            } else {
+                passwordInput.type = 'password';
+            }
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            renderItems(allItems);
+            // Update button styles
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === filter) {
+                    btn.classList.remove('bg-[#475569]', 'text-[#e2e8f0]');
+                    btn.classList.add('bg-[#f59e0b]', 'text-[#0f172a]');
+                } else {
+                    btn.classList.remove('bg-[#f59e0b]', 'text-[#0f172a]');
+                    btn.classList.add('bg-[#475569]', 'text-[#e2e8f0]');
+                }
+            });
+        }
+
+        function claimItem(itemId) {
+            const item = allItems.find(i => i.__backendId === itemId);
+            if (item && item.status !== 'claimed') {
+                const updatedItem = { ...item, status: 'claimed' };
+                window.dataSdk.update(updatedItem);
+                // The update will trigger reload, which refreshes the UI
+            }
+        }
+
+        function renderItems(items) {
+            const grid = document.getElementById('items-grid');
+            const emptyState = document.getElementById('empty-state');
+            const loadingState = document.getElementById('loading-state');
+
+            loadingState.classList.add('hidden');
+
+            let filteredItems = items;
+            if (currentFilter !== 'all') {
+                filteredItems = items.filter(item => item.type === currentFilter || item.status === currentFilter);
+            }
+
+            if (filteredItems.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                grid.innerHTML = filteredItems.map(item => `
+                    <div class="rounded-xl p-4 bg-[#334155]">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-semibold text-[#f8fafc]">${item.name}</h3>
+                            <span class="text-sm px-2 py-1 rounded-full ${item.type === 'lost' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#22c55e]/20 text-[#22c55e]'}">
+                                ${item.type === 'lost' ? '🔴 Lost' : '🟢 Found'}
+                            </span>
+                        </div>
+                        <p class="text-sm text-[#94a3b8] mb-2">${item.description}</p>
+                        <div class="text-xs text-[#64748b] mb-3">
+                            <p>📍 ${item.location}</p>
+                            <p>👤 ${item.contact}</p>
+                            <p>📅 ${item.date}</p>
+                        </div>
+                        ${item.status !== 'claimed' ? `<button onclick="claimItem('${item.__backendId}')" class="w-full py-2 rounded-lg font-medium bg-[#f59e0b] text-[#0f172a] hover:bg-[#d97706] transition-colors">✅ Claim Item</button>` : `<span class="text-sm text-[#22c55e] font-medium">✅ Claimed</span>`}
+                    </div>
+                `).join('');
+            }
+
+            // Update counts
+            document.getElementById('total-count').textContent = items.length;
+            document.getElementById('lost-count').textContent = items.filter(i => i.type === 'lost').length;
+            document.getElementById('found-count').textContent = items.filter(i => i.type === 'found').length;
+        }
+
+        document.getElementById('user-post-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('user-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Posting...';
+
+            const newItem = {
+                type: document.getElementById('user-type').value,
+                name: document.getElementById('user-name').value,
+                description: document.getElementById('user-desc').value,
+                location: document.getElementById('user-location').value,
+                contact: document.getElementById('user-contact').value,
+                date: document.getElementById('user-date').value,
+                status: 'posted'
+            };
+
+            await window.dataSdk.create(newItem);
+            togglePostPanel();
+            submitBtn.disabled = false;
+            submitBtn.textContent = '📝 Post to Board';
+        });
+
+        document.getElementById('admin-login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+            if (username === 'LSHSadmin' && password === 'LSHSAdmin2024') {
+                closeAdminLogin();
+                window.location.href = 'adminPanel.html';
+            } else {
+                alert('Invalid credentials');
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const result = await window.dataSdk.init({
+                onDataChanged: (data) => {
+                    allItems = data;
+                    renderItems(data);
+                }
+            });
+
+            window.elementSdk.init({
+                defaultConfig: {},
+                onConfigChange: (config) => {
+                    // Apply config if needed
+                }
+            });
+        });
+    </script>
+</body>
+</html>

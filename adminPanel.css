@@ -1,0 +1,39 @@
+/* Admin Panel Custom Styles */
+
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+.input-field {
+    background-color: #334155;
+    border-color: #475569;
+    color: #f8fafc;
+}
+
+.input-field:focus {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.panel-container {
+    background-color: #1e293b;
+    border-left: 1px solid #334155;
+}
+
+.panel-header {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+.animate-slide {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}

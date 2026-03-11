@@ -1,0 +1,66 @@
+/* Base Styles */
+* {
+    font-family: 'Poppins', sans-serif;
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+}
+
+#app {
+    background: #1e293b;
+}
+
+/* Header & Panels */
+header {
+    background: #0f172a;
+}
+
+.panel-container {
+    background: #1e293b;
+}
+
+.panel-header {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+/* Cards & Badges */
+.item-card {
+    background: #334155;
+    transition: all 0.3s ease;
+}
+
+.card-lost { border-left: 4px solid #ef4444; }
+.card-found { border-left: 4px solid #22c55e; }
+
+.badge-lost { background: #fef2f2; color: #dc2626; }
+.badge-found { background: #f0fdf4; color: #16a34a; }
+.badge-claimed { background: #fefce8; color: #ca8a04; }
+
+/* Interactive Elements */
+.input-field {
+    background: #1e293b;
+    border-color: #475569;
+    color: #f8fafc;
+}
+
+.input-field:focus {
+    --tw-ring-color: #22c55e;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide { 
+    animation: slideIn 0.3s ease-out; 
+}
+
+/* Admin Specifics */
+.admin-item-row {
+    background: #1e293b;
+}

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Lost and Found Board</title>
+
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>  
+    <link rel="stylesheet" href="adminPanel.css">
+    <script src="_sdk/element_sdk.js"></script>
+    <script src="_sdk/data_sdk.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+</head>
+
+<body class="h-full bg-[#0f172a] text-[#f8fafc]">
+    <div id="app" class="h-full overflow-auto">
+        <header class="sticky top-0 z-40 bg-[#1e293b] border-b border-[#334155]">
+            <div class="max-w-6xl mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-[#f59e0b]">
+                            🔧
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-[#f8fafc]">Admin Panel</h1>
+                            <p class="text-sm text-[#94a3b8]">Lost & Found Board Management</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="window.location.href='index.html'" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 bg-[#22c55e] text-white">
+                            ← Back to Board
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-6xl mx-auto px-4 py-6">
+            <div class="grid grid-cols-4 gap-3 mb-6">
+                <div class="rounded-xl p-4 text-center bg-[#334155]">
+                    <p id="total-count" class="text-2xl font-bold text-[#f59e0b]">0</p>
+                    <p class="text-xs text-[#94a3b8]">Total Items</p>
+                </div>
+                <div class="rounded-xl p-4 text-center bg-[#334155]">
+                    <p id="lost-count" class="text-2xl font-bold text-[#ef4444]">0</p>
+                    <p class="text-xs text-[#94a3b8]">Lost</p>
+                </div>
+                <div class="rounded-xl p-4 text-center bg-[#334155]">
+                    <p id="found-count" class="text-2xl font-bold text-[#22c55e]">0</p>
+                    <p class="text-xs text-[#94a3b8]">Found</p>
+                </div>
+                <div class="rounded-xl p-4 text-center bg-[#334155]">
+                    <p id="claimed-count" class="text-2xl font-bold text-[#f59e0b]">0</p>
+                    <p class="text-xs text-[#94a3b8]">Claimed</p>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                <button onclick="setAdminFilter('all')" data-filter="all" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#f59e0b] text-[#0f172a]"> All Items </button>
+                <button onclick="setAdminFilter('lost')" data-filter="lost" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 🔴 Lost </button>
+                <button onclick="setAdminFilter('found')" data-filter="found" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 🟢 Found </button>
+                <button onclick="setAdminFilter('claimed')" data-filter="claimed" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> ✅ Claimed </button>
+            </div>
+
+            <div id="admin-items-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+
+            <div id="admin-empty-state" class="hidden text-center py-16">
+                <div class="text-6xl mb-4">📭</div>
+                <h3 class="text-xl font-semibold mb-2 text-[#f8fafc]">No items</h3>
+                <p class="text-[#94a3b8]">No items to manage</p>
+            </div>
+
+            <div id="admin-loading-state" class="text-center py-16">
+                <div class="inline-block w-8 h-8 border-4 rounded-full animate-spin border-[#f59e0b] border-t-transparent"></div>
+                <p class="mt-4 text-[#94a3b8]">Loading items...</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentAdminFilter = 'all';
+        let allAdminItems = [];
+
+        function setAdminFilter(filter) {
+            currentAdminFilter = filter;
+            renderAdminItems(allAdminItems);
+            // Update button styles
+            document.querySelectorAll('.admin-filter-btn').forEach(btn => {
+                if (btn.dataset.filter === filter) {
+                    btn.classList.remove('bg-[#475569]', 'text-[#e2e8f0]');
+                    btn.classList.add('bg-[#f59e0b]', 'text-[#0f172a]');
+                } else {
+                    btn.classList.remove('bg-[#f59e0b]', 'text-[#0f172a]');
+                    btn.classList.add('bg-[#475569]', 'text-[#e2e8f0]');
+                }
+            });
+        }
+
+        function deleteItem(itemId) {
+            if (confirm('Are you sure you want to delete this item?')) {
+                window.dataSdk.delete({ __backendId: itemId });
+            }
+        }
+
+        function renderAdminItems(items) {
+            const grid = document.getElementById('admin-items-grid');
+            const emptyState = document.getElementById('admin-empty-state');
+            const loadingState = document.getElementById('admin-loading-state');
+
+            loadingState.classList.add('hidden');
+
+            let filteredItems = items;
+            if (currentAdminFilter !== 'all') {
+                filteredItems = items.filter(item => item.type === currentAdminFilter || item.status === currentAdminFilter);
+            }
+
+            if (filteredItems.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                grid.innerHTML = filteredItems.map(item => `
+                    <div class="rounded-xl p-4 bg-[#334155]">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-semibold text-[#f8fafc]">${item.name}</h3>
+                            <span class="text-sm px-2 py-1 rounded-full ${item.type === 'lost' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#22c55e]/20 text-[#22c55e]'}">
+                                ${item.type === 'lost' ? '🔴 Lost' : '🟢 Found'}
+                            </span>
+                        </div>
+                        <p class="text-sm text-[#94a3b8] mb-2">${item.description}</p>
+                        <div class="text-xs text-[#64748b] mb-3">
+                            <p>📍 ${item.location}</p>
+                            <p>👤 ${item.contact}</p>
+                            <p>📅 ${item.date}</p>
+                            <p>Status: ${item.status}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="deleteItem('${item.__backendId}')" class="flex-1 py-2 rounded-lg font-medium bg-[#ef4444] text-white hover:bg-[#dc2626] transition-colors">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Update counts
+            document.getElementById('total-count').textContent = items.length;
+            document.getElementById('lost-count').textContent = items.filter(i => i.type === 'lost').length;
+            document.getElementById('found-count').textContent = items.filter(i => i.type === 'found').length;
+            document.getElementById('claimed-count').textContent = items.filter(i => i.status === 'claimed').length;
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const result = await window.dataSdk.init({
+                onDataChanged: (data) => {
+                    allAdminItems = data;
+                    renderAdminItems(data);
+                }
+            });
+
+            window.elementSdk.init({
+                defaultConfig: {},
+                onConfigChange: (config) => {
+                    // Apply config if needed
+                }
+            });
+        });
+    </script>
+</body>
+</html>
