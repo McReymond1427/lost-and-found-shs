@@ -3,7 +3,18 @@ window.dataSdk = {
         console.log("Mock Data SDK Initialized");
         // Load existing data from Local Storage
         const savedData = localStorage.getItem('lost_found_data');
-        const data = savedData ? JSON.parse(savedData) : [];
+        let data = savedData ? JSON.parse(savedData) : [];
+        
+        // Automatically expire items older than 30 days
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+        data = data.filter(item => {
+            const itemDate = new Date(item.date);
+            return itemDate >= thirtyDaysAgo;
+        });
+        
+        // Save the filtered data back
+        localStorage.setItem('lost_found_data', JSON.stringify(data));
         
         // Tell the app about the data
         handler.onDataChanged(data);
