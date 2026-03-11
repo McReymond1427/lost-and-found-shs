@@ -54,6 +54,26 @@
                 </div>
             </div>
 
+            <!-- Search & Categorization Section -->
+            <div class="mb-6 space-y-4">
+                <!-- Search Input -->
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <input type="text" id="user-search" placeholder="Search by name, description, or location..." class="w-full px-4 py-3 rounded-lg bg-[#334155] border border-[#475569] text-[#f8fafc] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#f59e0b] focus:border-transparent">
+                    </div>
+                </div>
+                
+                <!-- Category Filters -->
+                <div class="flex gap-2 overflow-x-auto pb-2">
+                    <button onclick="setCategory('all')" data-category="all" class="category-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#f59e0b] text-[#0f172a]"> All Categories </button>
+                    <button onclick="setCategory('Electronics')" data-category="Electronics" class="category-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 📱 Electronics </button>
+                    <button onclick="setCategory('Stationery')" data-category="Stationery" class="category-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 📝 Stationery </button>
+                    <button onclick="setCategory('Clothing')" data-category="Clothing" class="category-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 👕 Clothing </button>
+                    <button onclick="setCategory('Documents')" data-category="Documents" class="category-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 📄 Documents </button>
+                    <button onclick="setCategory('Other')" data-category="Other" class="category-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 📦 Other </button>
+                </div>
+            </div>
+
             <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
                 <button onclick="setFilter('all')" data-filter="all" class="filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#f59e0b] text-[#0f172a]"> All Items </button>
                 <button onclick="setFilter('lost')" data-filter="lost" class="filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 🔴 Lost </button>
@@ -89,6 +109,17 @@
                             <select id="user-type" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
                                 <option value="lost">🔴 I Lost Something</option>
                                 <option value="found">🟢 I Found Something</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Category</label>
+                            <select id="user-category" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
+                                <option value="">Select Category</option>
+                                <option value="Electronics">📱 Electronics</option>
+                                <option value="Stationery">📝 Stationery</option>
+                                <option value="Clothing">👕 Clothing</option>
+                                <option value="Documents">📄 Documents</option>
+                                <option value="Other">📦 Other</option>
                             </select>
                         </div>
                         <div>
@@ -147,6 +178,8 @@
 
     <script>
         let currentFilter = 'all';
+        let currentCategory = 'all';
+        let currentSearch = '';
         let allItems = [];
 
         function togglePostPanel() {
@@ -185,6 +218,21 @@
             });
         }
 
+        function setCategory(category) {
+            currentCategory = category;
+            renderItems(allItems);
+            // Update button styles
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                if (btn.dataset.category === category) {
+                    btn.classList.remove('bg-[#475569]', 'text-[#e2e8f0]');
+                    btn.classList.add('bg-[#f59e0b]', 'text-[#0f172a]');
+                } else {
+                    btn.classList.remove('bg-[#f59e0b]', 'text-[#0f172a]');
+                    btn.classList.add('bg-[#475569]', 'text-[#e2e8f0]');
+                }
+            });
+        }
+
         function claimItem(itemId) {
             const item = allItems.find(i => i.__backendId === itemId);
             if (item && item.status !== 'claimed') {
@@ -206,6 +254,21 @@
                 filteredItems = items.filter(item => item.type === currentFilter || item.status === currentFilter);
             }
 
+            // Apply category filter
+            if (currentCategory !== 'all') {
+                filteredItems = filteredItems.filter(item => item.category === currentCategory);
+            }
+
+            // Apply search filter
+            if (currentSearch.trim() !== '') {
+                const searchTerm = currentSearch.toLowerCase();
+                filteredItems = filteredItems.filter(item => 
+                    item.name.toLowerCase().includes(searchTerm) ||
+                    item.description.toLowerCase().includes(searchTerm) ||
+                    item.location.toLowerCase().includes(searchTerm)
+                );
+            }
+
             if (filteredItems.length === 0) {
                 grid.innerHTML = '';
                 emptyState.classList.remove('hidden');
@@ -224,6 +287,7 @@
                             <p>📍 ${item.location}</p>
                             <p>👤 ${item.contact}</p>
                             <p>📅 ${item.date}</p>
+                            <p>📦 ${item.category || 'Other'}</p>
                         </div>
                         ${item.status !== 'claimed' ? `<button onclick="claimItem('${item.__backendId}')" class="w-full py-2 rounded-lg font-medium bg-[#f59e0b] text-[#0f172a] hover:bg-[#d97706] transition-colors">✅ Claim Item</button>` : `<span class="text-sm text-[#22c55e] font-medium">✅ Claimed</span>`}
                     </div>
@@ -244,6 +308,7 @@
 
             const newItem = {
                 type: document.getElementById('user-type').value,
+                category: document.getElementById('user-category').value,
                 name: document.getElementById('user-name').value,
                 description: document.getElementById('user-desc').value,
                 location: document.getElementById('user-location').value,
@@ -284,12 +349,13 @@
                     // Apply config if needed
                 }
             });
+
+            // Add search event listener
+            document.getElementById('user-search').addEventListener('input', (e) => {
+                currentSearch = e.target.value;
+                renderItems(allItems);
+            });
         });
     </script>
 </body>
-
 </html>
-
-
-
-
