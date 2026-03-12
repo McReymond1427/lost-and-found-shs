@@ -99,6 +99,10 @@
     </div>
 
     <script>
+        Updated script for adminPanel.html
+Replace the <script> section at the bottom of your adminPanel.html with this:
+
+JavaScript
         let currentAdminFilter = 'all';
         let currentAdminCategory = 'all';
         let currentAdminSearch = '';
@@ -107,36 +111,30 @@
         function setAdminFilter(filter) {
             currentAdminFilter = filter;
             renderAdminItems(allAdminItems);
-            // Update button styles
             document.querySelectorAll('.admin-filter-btn').forEach(btn => {
-                if (btn.dataset.filter === filter) {
-                    btn.classList.remove('bg-[#475569]', 'text-[#e2e8f0]');
-                    btn.classList.add('bg-[#f59e0b]', 'text-[#0f172a]');
-                } else {
-                    btn.classList.remove('bg-[#f59e0b]', 'text-[#0f172a]');
-                    btn.classList.add('bg-[#475569]', 'text-[#e2e8f0]');
-                }
+                btn.classList.toggle('bg-[#f59e0b]', btn.dataset.filter === filter);
+                btn.classList.toggle('text-[#0f172a]', btn.dataset.filter === filter);
+                btn.classList.toggle('bg-[#475569]', btn.dataset.filter !== filter);
+                btn.classList.toggle('text-[#e2e8f0]', btn.dataset.filter !== filter);
             });
         }
 
         function setAdminCategory(category) {
             currentAdminCategory = category;
             renderAdminItems(allAdminItems);
-            // Update button styles
             document.querySelectorAll('.admin-category-btn').forEach(btn => {
-                if (btn.dataset.category === category) {
-                    btn.classList.remove('bg-[#475569]', 'text-[#e2e8f0]');
-                    btn.classList.add('bg-[#f59e0b]', 'text-[#0f172a]');
-                } else {
-                    btn.classList.remove('bg-[#f59e0b]', 'text-[#0f172a]');
-                    btn.classList.add('bg-[#475569]', 'text-[#e2e8f0]');
-                }
+                btn.classList.toggle('bg-[#f59e0b]', btn.dataset.category === category);
+                btn.classList.toggle('text-[#0f172a]', btn.dataset.category === category);
+                btn.classList.toggle('bg-[#475569]', btn.dataset.category !== category);
+                btn.classList.toggle('text-[#e2e8f0]', btn.dataset.category !== category);
             });
         }
 
-        function deleteItem(itemId) {
+        // UPDATED: Now uses 'id' instead of '__backendId'
+        async function deleteItem(itemId) {
             if (confirm('Are you sure you want to delete this item?')) {
-                window.dataSdk.delete({ __backendId: itemId });
+                const success = await window.dataSdk.delete(itemId);
+                if (!success) alert("Failed to delete item.");
             }
         }
 
@@ -149,17 +147,14 @@
 
             let filteredItems = items;
 
-            // Apply type/status filter
             if (currentAdminFilter !== 'all') {
                 filteredItems = filteredItems.filter(item => item.type === currentAdminFilter || item.status === currentAdminFilter);
             }
 
-            // Apply category filter
             if (currentAdminCategory !== 'all') {
                 filteredItems = filteredItems.filter(item => item.category === currentAdminCategory);
             }
 
-            // Apply search filter
             if (currentAdminSearch.trim() !== '') {
                 const searchTerm = currentAdminSearch.toLowerCase();
                 filteredItems = filteredItems.filter(item => 
@@ -191,13 +186,12 @@
                             <p>Category: ${item.category || 'N/A'}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="deleteItem('${item.__backendId}')" class="flex-1 py-2 rounded-lg font-medium bg-[#ef4444] text-white hover:bg-[#dc2626] transition-colors">🗑️ Delete</button>
+                            <button onclick="deleteItem('${item.id}')" class="flex-1 py-2 rounded-lg font-medium bg-[#ef4444] text-white hover:bg-[#dc2626] transition-colors">🗑️ Delete</button>
                         </div>
                     </div>
                 `).join('');
             }
 
-            // Update counts
             document.getElementById('total-count').textContent = items.length;
             document.getElementById('lost-count').textContent = items.filter(i => i.type === 'lost').length;
             document.getElementById('found-count').textContent = items.filter(i => i.type === 'found').length;
@@ -205,21 +199,13 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            const result = await window.dataSdk.init({
+            await window.dataSdk.init({
                 onDataChanged: (data) => {
                     allAdminItems = data;
                     renderAdminItems(data);
                 }
             });
 
-            window.elementSdk.init({
-                defaultConfig: {},
-                onConfigChange: (config) => {
-                    // Apply config if needed
-                }
-            });
-
-            // Add search event listener
             document.getElementById('admin-search').addEventListener('input', (e) => {
                 currentAdminSearch = e.target.value;
                 renderAdminItems(allAdminItems);
@@ -228,5 +214,6 @@
     </script>
 </body>
 </html>
+
 
 
