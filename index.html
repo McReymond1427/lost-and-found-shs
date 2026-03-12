@@ -232,54 +232,67 @@
         }
 
         function renderItems(items) {
-            const grid = document.getElementById('items-grid');
-            const emptyState = document.getElementById('empty-state');
-            const loadingState = document.getElementById('loading-state');
+    const grid = document.getElementById('items-grid');
+    const emptyState = document.getElementById('empty-state');
+    const loadingState = document.getElementById('loading-state');
 
-            loadingState.classList.add('hidden');
+    loadingState.classList.add('hidden');
 
-            let filteredItems = items;
-            if (currentFilter !== 'all') {
-                filteredItems = items.filter(item => item.type === currentFilter || item.status === currentFilter);
-            }
+    let filteredItems = items;
 
-            if (currentCategory !== 'all') {
-                filteredItems = filteredItems.filter(item => item.category === currentCategory);
-            }
+    // 1. Filter by Type/Status
+    if (currentFilter !== 'all') {
+        if (currentFilter === 'claimed') {
+            filteredItems = filteredItems.filter(item => item.status === 'claimed');
+        } else {
+            // Only show 'posted' items when looking for Lost/Found
+            filteredItems = filteredItems.filter(item => item.type === currentFilter && item.status !== 'claimed');
+        }
+    }
 
-            if (currentSearch.trim() !== '') {
-                const searchTerm = currentSearch.toLowerCase();
-                filteredItems = filteredItems.filter(item => 
-                    item.name.toLowerCase().includes(searchTerm) ||
-                    item.description.toLowerCase().includes(searchTerm) ||
-                    item.location.toLowerCase().includes(searchTerm)
-                );
-            }
+    // 2. Filter by Category
+    if (currentCategory !== 'all') {
+        filteredItems = filteredItems.filter(item => item.category === currentCategory);
+    }
 
-            if (filteredItems.length === 0) {
-                grid.innerHTML = '';
-                emptyState.classList.remove('hidden');
-            } else {
-                emptyState.classList.add('hidden');
-                grid.innerHTML = filteredItems.map(item => `
-                    <div class="rounded-xl p-4 bg-[#334155]">
-                        <div class="flex items-start justify-between mb-2">
-                            <h3 class="font-semibold text-[#f8fafc]">${item.name}</h3>
-                            <span class="text-sm px-2 py-1 rounded-full ${item.type === 'lost' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#22c55e]/20 text-[#22c55e]'}">
-                                ${item.type === 'lost' ? '🔴 Lost' : '🟢 Found'}
-                            </span>
-                        </div>
-                        <p class="text-sm text-[#94a3b8] mb-2">${item.description}</p>
-                        <div class="text-xs text-[#64748b] mb-3">
-                            <p>📍 ${item.location}</p>
-                            <p>👤 ${item.contact}</p>
-                            <p>📅 ${item.date}</p>
-                            <p>📦 ${item.category || 'Other'}</p>
-                        </div>
-                        ${item.status !== 'claimed' 
-                            ? `<button onclick="claimItem('${item.id}')" class="w-full py-2 rounded-lg font-medium bg-[#f59e0b] text-[#0f172a] hover:bg-[#d97706] transition-colors">✅ Claim Item</button>` 
-                            : `<span class="text-sm text-[#22c55e] font-medium">✅ Claimed</span>`}
-                    </div>
+    // 3. Filter by Search
+    if (currentSearch.trim() !== '') {
+        const searchTerm = currentSearch.toLowerCase();
+        filteredItems = filteredItems.filter(item => 
+            item.name.toLowerCase().includes(searchTerm) ||
+            item.description.toLowerCase().includes(searchTerm) ||
+            item.location.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    // Update the Dashboard Counts
+    document.getElementById('total-count').textContent = items.length;
+    document.getElementById('lost-count').textContent = items.filter(i => i.type === 'lost' && i.status !== 'claimed').length;
+    document.getElementById('found-count').textContent = items.filter(i => i.type === 'found' && i.status !== 'claimed').length;
+
+    if (filteredItems.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+    } else {
+        emptyState.classList.add('hidden');
+        grid.innerHTML = filteredItems.map(item => `
+            <div class="rounded-xl p-4 bg-[#334155] border border-transparent hover:border-[#f59e0b] transition-all duration-300">
+                <div class="flex items-start justify-between mb-2">
+                    <h3 class="font-semibold text-[#f8fafc] line-clamp-1">${item.name}</h3>
+                    <span class="text-[10px] uppercase font-bold px-2 py-1 rounded-md ${item.type === 'lost' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#22c55e]/20 text-[#22c55e]'}">
+                        ${item.type}
+                    </span>
+                </div>
+                <p class="text-sm text-[#94a3b8] mb-4 line-clamp-2 h-10">${item.description}</p>
+                <div class="space-y-1 text-xs text-[#64748b] mb-4">
+                    <p class="flex items-center gap-1">📍 <span>${item.location}</span></p>
+                    <p class="flex items-center gap-1">📅 <span>${new Date(item.date).toLocaleDateString()}</span></p>
+                    <p class="flex items-center gap-1">📦 <span class="capitalize">${item.category || 'Other'}</span></p>
+                </div>
+                ${item.status !== 'claimed' 
+                    ? `<button onclick="claimItem('${item.id}')" class="w-full py-2 rounded-lg font-medium bg-[#f59e0b] text-[#0f172a] hover:bg-[#d97706] active:scale-95 transition-all">✅ Claim Item</button>` 
+                    : `<div class="w-full py-2 text-center rounded-lg font-medium bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20">Claimed</div>`}
+            </div>
                 `).join('');
             }
 
@@ -339,6 +352,4 @@
     </script>
 </body>
 </html>
-
-
 
