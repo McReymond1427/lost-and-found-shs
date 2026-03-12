@@ -197,49 +197,37 @@
 
         function togglePasswordVisibility() {
             const passwordInput = document.getElementById('admin-password');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-            } else {
-                passwordInput.type = 'password';
-            }
+            passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
         }
 
         function setFilter(filter) {
             currentFilter = filter;
             renderItems(allItems);
-            // Update button styles
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                if (btn.dataset.filter === filter) {
-                    btn.classList.remove('bg-[#475569]', 'text-[#e2e8f0]');
-                    btn.classList.add('bg-[#f59e0b]', 'text-[#0f172a]');
-                } else {
-                    btn.classList.remove('bg-[#f59e0b]', 'text-[#0f172a]');
-                    btn.classList.add('bg-[#475569]', 'text-[#e2e8f0]');
-                }
+                btn.classList.toggle('bg-[#f59e0b]', btn.dataset.filter === filter);
+                btn.classList.toggle('text-[#0f172a]', btn.dataset.filter === filter);
+                btn.classList.toggle('bg-[#475569]', btn.dataset.filter !== filter);
+                btn.classList.toggle('text-[#e2e8f0]', btn.dataset.filter !== filter);
             });
         }
 
         function setCategory(category) {
             currentCategory = category;
             renderItems(allItems);
-            // Update button styles
             document.querySelectorAll('.category-btn').forEach(btn => {
-                if (btn.dataset.category === category) {
-                    btn.classList.remove('bg-[#475569]', 'text-[#e2e8f0]');
-                    btn.classList.add('bg-[#f59e0b]', 'text-[#0f172a]');
-                } else {
-                    btn.classList.remove('bg-[#f59e0b]', 'text-[#0f172a]');
-                    btn.classList.add('bg-[#475569]', 'text-[#e2e8f0]');
-                }
+                btn.classList.toggle('bg-[#f59e0b]', btn.dataset.category === category);
+                btn.classList.toggle('text-[#0f172a]', btn.dataset.category === category);
+                btn.classList.toggle('bg-[#475569]', btn.dataset.category !== category);
+                btn.classList.toggle('text-[#e2e8f0]', btn.dataset.category !== category);
             });
         }
 
-        function claimItem(itemId) {
-            const item = allItems.find(i => i.__backendId === itemId);
+        // UPDATED: Uses 'id' instead of '__backendId'
+        async function claimItem(itemId) {
+            const item = allItems.find(i => i.id === itemId);
             if (item && item.status !== 'claimed') {
                 const updatedItem = { ...item, status: 'claimed' };
-                window.dataSdk.update(updatedItem);
-                // The update will trigger reload, which refreshes the UI
+                await window.dataSdk.update(updatedItem);
             }
         }
 
@@ -255,12 +243,10 @@
                 filteredItems = items.filter(item => item.type === currentFilter || item.status === currentFilter);
             }
 
-            // Apply category filter
             if (currentCategory !== 'all') {
                 filteredItems = filteredItems.filter(item => item.category === currentCategory);
             }
 
-            // Apply search filter
             if (currentSearch.trim() !== '') {
                 const searchTerm = currentSearch.toLowerCase();
                 filteredItems = filteredItems.filter(item => 
@@ -290,12 +276,13 @@
                             <p>📅 ${item.date}</p>
                             <p>📦 ${item.category || 'Other'}</p>
                         </div>
-                        ${item.status !== 'claimed' ? `<button onclick="claimItem('${item.__backendId}')" class="w-full py-2 rounded-lg font-medium bg-[#f59e0b] text-[#0f172a] hover:bg-[#d97706] transition-colors">✅ Claim Item</button>` : `<span class="text-sm text-[#22c55e] font-medium">✅ Claimed</span>`}
+                        ${item.status !== 'claimed' 
+                            ? `<button onclick="claimItem('${item.id}')" class="w-full py-2 rounded-lg font-medium bg-[#f59e0b] text-[#0f172a] hover:bg-[#d97706] transition-colors">✅ Claim Item</button>` 
+                            : `<span class="text-sm text-[#22c55e] font-medium">✅ Claimed</span>`}
                     </div>
                 `).join('');
             }
 
-            // Update counts
             document.getElementById('total-count').textContent = items.length;
             document.getElementById('lost-count').textContent = items.filter(i => i.type === 'lost').length;
             document.getElementById('found-count').textContent = items.filter(i => i.type === 'found').length;
@@ -337,21 +324,13 @@
         });
 
         window.addEventListener('DOMContentLoaded', async () => {
-            const result = await window.dataSdk.init({
+            await window.dataSdk.init({
                 onDataChanged: (data) => {
                     allItems = data;
                     renderItems(data);
                 }
             });
 
-            window.elementSdk.init({
-                defaultConfig: {},
-                onConfigChange: (config) => {
-                    // Apply config if needed
-                }
-            });
-
-            // Add search event listener
             document.getElementById('user-search').addEventListener('input', (e) => {
                 currentSearch = e.target.value;
                 renderItems(allItems);
@@ -360,4 +339,5 @@
     </script>
 </body>
 </html>
+
 
