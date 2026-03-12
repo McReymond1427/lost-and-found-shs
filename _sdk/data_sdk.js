@@ -1,6 +1,6 @@
 // Supabase configuration
-const supabaseUrl = 'YOUR_SUPABASE_URL';
-const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+const supabaseUrl = '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xYWV2b2Z3enlrY2JxZGJqZGd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNzgzNTAsImV4cCI6MjA4ODg1NDM1MH0.81vckiSTZ-amlbNKXdVD_ZjOhoVmK9W_IQrqDDtwr3k';
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 window.dataSdk = {
@@ -88,3 +88,4 @@ async function fetchItems() {
 
     return data || [];
 }
+
