@@ -1,7 +1,9 @@
 // Supabase configuration
 const supabaseUrl = 'https://mqaevofwzykcbqdbjdgz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xYWV2b2Z3enlrY2JxZGJqZGd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNzgzNTAsImV4cCI6MjA4ODg1NDM1MH0.81vckiSTZ-amlbNKXdVD_ZjOhoVmK9W_IQrqDDtwr3k';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+// FIX: Use the global createClient function provided by the Supabase CDN
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 window.dataSdk = {
     init: async ({ onDataChanged }) => {
@@ -88,5 +90,4 @@ async function fetchItems() {
 
     return data || [];
 }
-
 
