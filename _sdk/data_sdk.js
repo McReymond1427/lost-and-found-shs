@@ -30,16 +30,15 @@ window.dataSdk = {
     },
 
     create: async (newItem) => {
-        const { data, error } = await supabaseClient
+        const { error } = await supabaseClient
             .from('items')
-            .insert([newItem])
-            .select(); // FIX: Added .select() to return the created record
+            .insert([newItem]);
 
         if (error) {
             console.error('Error creating item:', error);
             return null;
         }
-        return data[0];
+        return newItem;
     },
 
     update: async (updatedItem) => {
@@ -82,6 +81,5 @@ async function fetchItems() {
     }
     return data || [];
 }
-
 
 
