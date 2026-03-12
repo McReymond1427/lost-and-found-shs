@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>  
     <link rel="stylesheet" href="adminPanel.css">
-    <script src="_sdk/element_sdk.js"></script>
     <script src="_sdk/data_sdk.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -135,56 +134,73 @@
         }
 
         function renderAdminItems(items) {
-            const grid = document.getElementById('admin-items-grid');
-            const emptyState = document.getElementById('admin-empty-state');
-            const loadingState = document.getElementById('admin-loading-state');
+    const grid = document.getElementById('admin-items-grid');
+    const emptyState = document.getElementById('admin-empty-state');
+    const loadingState = document.getElementById('admin-loading-state');
 
-            loadingState.classList.add('hidden');
+    loadingState.classList.add('hidden');
 
-            let filteredItems = items;
+    let filteredItems = items;
 
-            if (currentAdminFilter !== 'all') {
-                filteredItems = filteredItems.filter(item => item.type === currentAdminFilter || item.status === currentAdminFilter);
-            }
+    // Filter by Type/Status
+    if (currentAdminFilter !== 'all') {
+        if (currentAdminFilter === 'claimed') {
+            filteredItems = filteredItems.filter(item => item.status === 'claimed');
+        } else {
+            // If filtering by Lost or Found, usually you want to hide things already claimed
+            filteredItems = filteredItems.filter(item => item.type === currentAdminFilter && item.status !== 'claimed');
+        }
+    }
 
-            if (currentAdminCategory !== 'all') {
-                filteredItems = filteredItems.filter(item => item.category === currentAdminCategory);
-            }
+    // Filter by Category
+    if (currentAdminCategory !== 'all') {
+        filteredItems = filteredItems.filter(item => item.category === currentAdminCategory);
+    }
 
-            if (currentAdminSearch.trim() !== '') {
-                const searchTerm = currentAdminSearch.toLowerCase();
-                filteredItems = filteredItems.filter(item => 
-                    item.name.toLowerCase().includes(searchTerm) ||
-                    item.description.toLowerCase().includes(searchTerm) ||
-                    item.location.toLowerCase().includes(searchTerm)
-                );
-            }
+    // Filter by Search
+    if (currentAdminSearch.trim() !== '') {
+        const searchTerm = currentAdminSearch.toLowerCase();
+        filteredItems = filteredItems.filter(item => 
+            item.name.toLowerCase().includes(searchTerm) ||
+            item.description.toLowerCase().includes(searchTerm) ||
+            item.location.toLowerCase().includes(searchTerm)
+        );
+    }
 
-            if (filteredItems.length === 0) {
-                grid.innerHTML = '';
-                emptyState.classList.remove('hidden');
-            } else {
-                emptyState.classList.add('hidden');
-                grid.innerHTML = filteredItems.map(item => `
-                    <div class="rounded-xl p-4 bg-[#334155]">
-                        <div class="flex items-start justify-between mb-2">
-                            <h3 class="font-semibold text-[#f8fafc]">${item.name}</h3>
-                            <span class="text-sm px-2 py-1 rounded-full ${item.type === 'lost' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#22c55e]/20 text-[#22c55e]'}">
-                                ${item.type === 'lost' ? '🔴 Lost' : '🟢 Found'}
-                            </span>
-                        </div>
-                        <p class="text-sm text-[#94a3b8] mb-2">${item.description}</p>
-                        <div class="text-xs text-[#64748b] mb-3">
-                            <p>📍 ${item.location}</p>
-                            <p>👤 ${item.contact}</p>
-                            <p>📅 ${item.date}</p>
-                            <p>Status: ${item.status}</p>
-                            <p>Category: ${item.category || 'N/A'}</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="deleteItem('${item.id}')" class="flex-1 py-2 rounded-lg font-medium bg-[#ef4444] text-white hover:bg-[#dc2626] transition-colors">🗑️ Delete</button>
-                        </div>
-                    </div>
+    // Update Dashboard Stats
+    document.getElementById('total-count').textContent = items.length;
+    document.getElementById('lost-count').textContent = items.filter(i => i.type === 'lost' && i.status !== 'claimed').length;
+    document.getElementById('found-count').textContent = items.filter(i => i.type === 'found' && i.status !== 'claimed').length;
+    document.getElementById('claimed-count').textContent = items.filter(i => i.status === 'claimed').length;
+
+    if (filteredItems.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        // Update text to show if it's a search result empty state
+        emptyState.querySelector('p').textContent = currentAdminSearch ? "No items match your search." : "No items to manage.";
+    } else {
+        emptyState.classList.add('hidden');
+        grid.innerHTML = filteredItems.map(item => `
+            <div class="rounded-xl p-4 bg-[#334155] border border-[#475569] hover:border-[#f59e0b] transition-colors">
+                <div class="flex items-start justify-between mb-2">
+                    <h3 class="font-semibold text-[#f8fafc] line-clamp-1">${item.name}</h3>
+                    <span class="text-[10px] uppercase tracking-wider px-2 py-1 rounded-md font-bold ${item.type === 'lost' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}">
+                        ${item.type}
+                    </span>
+                </div>
+                <p class="text-sm text-[#94a3b8] mb-4 line-clamp-2 h-10">${item.description}</p>
+                <div class="grid grid-cols-2 gap-2 text-[11px] text-[#64748b] mb-4 bg-[#1e293b]/50 p-2 rounded-lg">
+                    <p>📍 ${item.location}</p>
+                    <p>📅 ${new Date(item.date).toLocaleDateString()}</p>
+                    <p>📁 ${item.category || 'General'}</p>
+                    <p class="${item.status === 'claimed' ? 'text-orange-400' : 'text-blue-400'}">✨ ${item.status}</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="deleteItem('${item.id}')" class="flex-1 py-2 rounded-lg text-sm font-medium bg-[#ef4444]/10 text-[#ef4444] hover:bg-[#ef4444] hover:text-white transition-all">
+                        🗑️ Remove
+                    </button>
+                </div>
+            </div>
                 `).join('');
             }
 
@@ -210,7 +226,6 @@
     </script>
 </body>
 </html>
-
 
 
 
