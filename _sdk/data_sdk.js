@@ -1,91 +1,85 @@
-// Supabase configuration
+// Ensure the Supabase library is loaded via CDN in your HTML first:
+// <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 const supabaseUrl = 'https://mqaevofwzykcbqdbjdgz.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xYWV2b2Z3enlrY2JxZGJqZGd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNzgzNTAsImV4cCI6MjA4ODg1NDM1MH0.81vckiSTZ-amlbNKXdVD_ZjOhoVmK9W_IQrqDDtwr3k';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Your key here
+
+// FIX: Reference the library correctly (usually 'supabase' or 'window.supabase')
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 window.dataSdk = {
     init: async ({ onDataChanged }) => {
         console.log("Data SDK Initialized with Supabase");
 
-        // Initial fetch
         const data = await fetchItems();
-        if (onDataChanged) {
-            onDataChanged(data);
-        }
+        if (onDataChanged) onDataChanged(data);
 
-        // Set up real-time subscription
-        const channel = supabase
+        const channel = supabaseClient
             .channel('items_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, (payload) => {
-                console.log('Change received!', payload);
-                fetchItems().then(data => {
-                    if (onDataChanged) {
-                        onDataChanged(data);
-                    }
-                });
-            })
+            .on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'items' }, 
+                async (payload) => {
+                    console.log('Change received!', payload);
+                    const freshData = await fetchItems();
+                    if (onDataChanged) onDataChanged(freshData);
+                }
+            )
             .subscribe();
 
         return { success: true };
     },
 
     create: async (newItem) => {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('items')
-            .insert([newItem]);
+            .insert([newItem])
+            .select(); // FIX: Added .select() to return the created record
 
         if (error) {
             console.error('Error creating item:', error);
-            alert("Error saving item");
             return null;
         }
-
-        return data;
+        return data[0];
     },
 
     update: async (updatedItem) => {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('items')
             .update(updatedItem)
-            .eq('id', updatedItem.id);
+            .eq('id', updatedItem.id)
+            .select(); // FIX: Added .select() to return the updated record
 
         if (error) {
             console.error('Error updating item:', error);
-            alert("Error updating item");
             return null;
         }
-
-        return data;
+        return data[0];
     },
 
     delete: async (itemId) => {
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('items')
             .delete()
             .eq('id', itemId);
 
-        if (error) {
-            console.error('Error deleting item:', error);
-            alert("Error deleting item");
-            return false;
-        }
-
-        return true;
+        return !error;
     }
 };
 
-// Helper function to fetch items
 async function fetchItems() {
-    const { data, error } = await supabase
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const { data, error } = await supabaseClient
         .from('items')
         .select('*')
+        .gte('created_at', thirtyDaysAgo.toISOString()) // Only get last 30 days
         .order('created_at', { ascending: false });
 
     if (error) {
         console.error('Error fetching items:', error);
         return [];
     }
-
     return data || [];
 }
 
