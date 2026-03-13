@@ -376,20 +376,18 @@
             for (const item of filteredItems) {
                 try {
                     let comments = await window.dataSdk.fetchComments(item.id);
-                    // Try logging the result for debugging
-                    console.log('Fetched comments for item', item.id, comments);
-                    if (Array.isArray(comments)) {
-                        // Supabase returns array
-                    } else if (comments && typeof comments === 'object') {
-                        // Supabase returns object with .data
-                        if ('data' in comments && Array.isArray(comments.data)) {
+                    // If comments is undefined/null, fallback to empty array
+                    if (!comments) comments = [];
+                    // If comments is not array, try to convert
+                    if (!Array.isArray(comments)) {
+                        if (typeof comments === 'object' && 'data' in comments && Array.isArray(comments.data)) {
                             comments = comments.data;
                         } else {
                             comments = [];
                         }
-                    } else {
-                        comments = [];
                     }
+                    // If still not array, fallback
+                    if (!Array.isArray(comments)) comments = [];
                     const numSpan = document.getElementById(`comments-num-${item.id}`);
                     if (numSpan) numSpan.textContent = comments.length;
                 } catch (err) {
