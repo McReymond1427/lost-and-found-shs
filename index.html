@@ -445,6 +445,23 @@
             if (form) form.classList.toggle('hidden');
         };
 
+        window.addReply = async function(itemId, parentCommentId) {
+            const authorInput = document.getElementById(`reply-author-${parentCommentId}`);
+            const textInput = document.getElementById(`reply-text-${parentCommentId}`);
+            const author = authorInput.value.trim();
+            const text = textInput.value.trim();
+            if (!author || !text) return;
+            // Save reply as a comment with parent_comment_id
+            const result = await window.dataSdk.createComment(itemId, author, text, parentCommentId);
+            if (result) {
+                authorInput.value = '';
+                textInput.value = '';
+                await showComments(itemId);
+            } else {
+                alert('Hindi na-save ang reply. Subukan muli.');
+            }
+        };
+
         window.addEventListener('DOMContentLoaded', async () => {
             await window.dataSdk.init({
                 onDataChanged: (data) => {
