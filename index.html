@@ -199,6 +199,11 @@
             </div>
         </div>
 
+        <!-- Add CSS for scroll-comments -->
+        <style>
+            .scroll-comments { max-height: 250px; overflow-y: auto; }
+        </style>
+
     <script>
         // --- UI state (filters/search) ---
         let currentFilter = 'all';
@@ -280,7 +285,7 @@
             const comments = await window.dataSdk.fetchComments(itemId);
             const commentsList = document.getElementById('comments-list');
             commentsList.innerHTML = comments.length > 0 
-                ? `<div style="max-height: 250px; overflow-y: auto;">${comments.map(c => `
+                ? `<div class="scroll-comments" style="max-height: 250px; overflow-y: auto;">${comments.map(c => `
                     <div class="bg-[#334155] p-3 rounded-lg mb-2">
                         <p class="font-bold text-sm text-white">${c.author}</p>
                         <p class="text-sm text-gray-300">${c.text}</p>
