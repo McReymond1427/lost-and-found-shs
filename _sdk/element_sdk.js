@@ -1,51 +1,46 @@
+const supabaseUrl = 'https://mugzzeulgpvqraatyyww.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11Z3p6ZXVsZ3B2cXJhYXR5eXd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNjU4NDAsImV4cCI6MjA4ODg0MTg0MH0.rkje-J36box9-ErTEcnFMHyd0t0wL5olDCyZNjXGd4Y';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
 window.dataSdk = {
-    init: async (handler) => {
-        console.log("Mock Data SDK Initialized");
-        // Load existing data from Local Storage
-        const savedData = localStorage.getItem('lost_found_data');
-        let data = savedData ? JSON.parse(savedData) : [];
-        
-        // Automatically expire items older than 30 days
-        const now = new Date();
-        const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
-        data = data.filter(item => {
-            const itemDate = new Date(item.date);
-            return itemDate >= thirtyDaysAgo;
-        });
-        
-        // Save the filtered data back
-        localStorage.setItem('lost_found_data', JSON.stringify(data));
-        
-        // Tell the app about the data
-        handler.onDataChanged(data);
+    init: async ({ onDataChanged }) => {
+        console.log("Supabase Data SDK Initialized");
+
+        // 1. Initial Load
+        const { data, error } = await supabaseClient
+            .from('items')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (!error) onDataChanged(data);
+
+        // 2. Real-time Subscription (No more location.reload!)
+        supabaseClient
+            .channel('public:items')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, async () => {
+                const { data: freshData } = await supabaseClient.from('items').select('*');
+                onDataChanged(freshData);
+            })
+            .subscribe();
+
         return { isOk: true };
     },
 
     create: async (newItem) => {
-        const data = JSON.parse(localStorage.getItem('lost_found_data') || '[]');
-        // Add a unique ID for the backend to recognize
-        newItem.__backendId = Date.now().toString(); 
-        data.push(newItem);
-        localStorage.setItem('lost_found_data', JSON.stringify(data));
+        const { data, error } = await supabaseClient
+            .from('items')
+            .insert([newItem])
+            .select();
         
-        // Refresh the UI by triggering the data change
-        location.reload(); 
-        return { isOk: true };
+        return { isOk: !error, data: data ? data[0] : null };
     },
 
-    update: async (updatedItem) => {
-        let data = JSON.parse(localStorage.getItem('lost_found_data') || '[]');
-        data = data.map(item => item.__backendId === updatedItem.__backendId ? updatedItem : item);
-        localStorage.setItem('lost_found_data', JSON.stringify(data));
-        location.reload();
-        return { isOk: true };
-    },
-
-    delete: async (itemToDelete) => {
-        let data = JSON.parse(localStorage.getItem('lost_found_data') || '[]');
-        data = data.filter(item => item.__backendId !== itemToDelete.__backendId);
-        localStorage.setItem('lost_found_data', JSON.stringify(data));
-        location.reload();
-        return { isOk: true };
+    delete: async (itemId) => {
+        const { error } = await supabaseClient
+            .from('items')
+            .delete()
+            .eq('id', itemId); // Note: Use 'id' instead of '__backendId'
+            
+        return { isOk: !error };
     }
 };
