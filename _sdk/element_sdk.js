@@ -6,24 +6,32 @@ window.dataSdk = {
     init: async ({ onDataChanged }) => {
         console.log("Supabase Data SDK Initialized");
 
-        // 1. Initial Load
+        // 1. Initial Load (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
         const { data, error } = await supabaseClient
             .from('items')
             .select('*')
+            .gte('created_at', thirtyDaysAgo.toISOString())
             .order('created_at', { ascending: false });
 
         if (!error) onDataChanged(data);
 
         // 2. Real-time Subscription (No more location.reload!)
-        supabaseClient
+        const channel = supabaseClient
             .channel('public:items')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, async () => {
-                const { data: freshData } = await supabaseClient.from('items').select('*');
+                const { data: freshData } = await supabaseClient
+                    .from('items')
+                    .select('*')
+                    .gte('created_at', thirtyDaysAgo.toISOString())
+                    .order('created_at', { ascending: false });
                 onDataChanged(freshData);
             })
             .subscribe();
 
-        return { isOk: true };
+        return { isOk: true, unsubscribe: () => channel.unsubscribe() };
     },
 
     create: async (newItem) => {
