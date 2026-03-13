@@ -40,7 +40,11 @@ window.dataSdk = {
             .insert([newItem])
             .select();
         
-        return { isOk: !error, data: data ? data[0] : null };
+        if (error) {
+            console.error('Supabase Insert Error:', error.message);
+            return null;
+        }
+        return data[0];
     },
 
     delete: async (itemId) => {
