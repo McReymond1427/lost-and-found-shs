@@ -228,7 +228,7 @@
                     <span class="font-medium">💬 ${item.comments?.length || 0}</span> comments
                     ${item.comments?.length ? `<div class="mt-1 text-[11px] text-[#cbd5e1] line-clamp-2">"${item.comments[item.comments.length - 1].text}" — ${item.comments[item.comments.length - 1].author}</div>` : ''}
                 </div>
-                <button onclick="addComment('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-[#475569] text-[#e2e8f0] hover:bg-[#6b7280] active:scale-95 transition-all">💬 Add comment</button>
+                <button onclick="addComment('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-[#475569] text-[#e2e8f0] hover:bg-[#6b7280] active:scale-95 transition-all">💬 See comments</button>
                 <div class="flex gap-2">
                     <button onclick="deleteItem('${item.id}')" class="flex-1 py-2 rounded-lg text-sm font-medium bg-[#ef4444]/10 text-[#ef4444] hover:bg-[#ef4444] hover:text-white transition-all">
                         🗑️ Remove
