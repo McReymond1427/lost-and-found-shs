@@ -14,6 +14,7 @@
 </head>
 
 <body class="h-full">
+    <!-- Main app container for the Lost & Found board -->
     <div id="app" class="h-full overflow-auto">
         <header class="sticky top-0 z-40">
             <div class="max-w-6xl mx-auto px-4 py-4">
@@ -178,10 +179,11 @@
         </div>
 
     <script>
+        // --- UI state (filters/search) ---
         let currentFilter = 'all';
         let currentCategory = 'all';
         let currentSearch = '';
-        let allItems = [];
+        let allItems = []; // cached items from the backend
 
         function togglePostPanel() {
             document.getElementById('post-overlay').classList.toggle('hidden');
@@ -229,6 +231,33 @@
                 const updatedItem = { ...item, status: 'claimed' };
                 await window.dataSdk.update(updatedItem);
             }
+        }
+
+        async function addComment(itemId) {
+            const item = allItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            const author = prompt('Enter your name for the comment:');
+            if (!author) return;
+
+            const text = prompt('Enter your comment:');
+            if (!text) return;
+
+            const newComment = {
+                author: author.trim(),
+                text: text.trim(),
+                createdAt: new Date().toISOString(),
+            };
+
+            const updatedItem = {
+                ...item,
+                comments: [
+                    ...(item.comments ?? []),
+                    newComment,
+                ],
+            };
+
+            await window.dataSdk.update(updatedItem);
         }
 
         function renderItems(items) {
@@ -289,16 +318,17 @@
                     <p class="flex items-center gap-1">📅 <span>${new Date(item.date).toLocaleDateString()}</span></p>
                     <p class="flex items-center gap-1">📦 <span class="capitalize">${item.category || 'Other'}</span></p>
                 </div>
+                <div class="text-xs text-[#94a3b8] mb-3">
+                    <span class="font-medium">💬 ${item.comments?.length || 0}</span> comments
+                    ${item.comments?.length ? `<div class="mt-1 text-[11px] text-[#cbd5e1] line-clamp-2">"${item.comments[item.comments.length - 1].text}" — ${item.comments[item.comments.length - 1].author}</div>` : ''}
+                </div>
+                <button onclick="addComment('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-[#475569] text-[#e2e8f0] hover:bg-[#6b7280] active:scale-95 transition-all">💬 Add comment</button>
                 ${item.status !== 'claimed' 
                     ? `<button onclick="claimItem('${item.id}')" class="w-full py-2 rounded-lg font-medium bg-[#f59e0b] text-[#0f172a] hover:bg-[#d97706] active:scale-95 transition-all">✅ Claim Item</button>` 
                     : `<div class="w-full py-2 text-center rounded-lg font-medium bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20">Claimed</div>`}
             </div>
                 `).join('');
             }
-
-            document.getElementById('total-count').textContent = items.length;
-            document.getElementById('lost-count').textContent = items.filter(i => i.type === 'lost').length;
-            document.getElementById('found-count').textContent = items.filter(i => i.type === 'found').length;
         }
 
         document.getElementById('user-post-form').addEventListener('submit', async (e) => {
@@ -315,7 +345,8 @@
                 location: document.getElementById('user-location').value,
                 contact: document.getElementById('user-contact').value,
                 date: document.getElementById('user-date').value,
-                status: 'posted'
+                status: 'posted',
+                comments: []
             };
 
             await window.dataSdk.create(newItem);
@@ -352,8 +383,4 @@
     </script>
 </body>
 </html>
-
-
-
-
 
