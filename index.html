@@ -278,21 +278,17 @@
         async function showComments(itemId) {
             // Kukuha tayo ng fresh data mula sa bagong table
             const comments = await window.dataSdk.fetchComments(itemId);
-            
             const commentsList = document.getElementById('comments-list');
-            
             commentsList.innerHTML = comments.length > 0 
-                ? comments.map(c => `
-            <div class="bg-[#334155] p-3 rounded-lg mb-2">
-                <p class="font-bold text-sm text-white">${c.author}</p>
-                <p class="text-sm text-gray-300">${c.text}</p>
-                <p class="text-[10px] text-gray-500">${new Date(c.created_at).toLocaleString()}</p>
-            </div>
-        `).join('')
-        : '<p class="text-center text-gray-400 py-4">No comments yet.</p>';
-
+                ? `<div style="max-height: 250px; overflow-y: auto;">${comments.map(c => `
+                    <div class="bg-[#334155] p-3 rounded-lg mb-2">
+                        <p class="font-bold text-sm text-white">${c.author}</p>
+                        <p class="text-sm text-gray-300">${c.text}</p>
+                        <p class="text-[10px] text-gray-500">${new Date(c.created_at).toLocaleString()}</p>
+                    </div>
+                `).join('')}</div>`
+                : '<p class="text-center text-gray-400 py-4">No comments yet.</p>';
             document.getElementById('comments-overlay').classList.remove('hidden');
-            // Set the itemId for the form
             document.getElementById('comment-form').dataset.itemId = itemId;
         }
 
@@ -360,7 +356,6 @@
                 </div>
                 <div class="text-xs text-[#94a3b8] mb-3" id="comments-count-${item.id}">
                     <span class="font-medium">💬 <span id="comments-num-${item.id}">0</span></span> comments
-                    ${item.comments?.length ? `<div class="mt-1 text-[11px] text-[#cbd5e1] line-clamp-2">"${item.comments[item.comments.length - 1].text}" — ${item.comments[item.comments.length - 1].author}</div>` : ''}
                 </div>
                 <button onclick="showComments('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-[#475569] text-[#e2e8f0] hover:bg-[#6b7280] active:scale-95 transition-all">💬 See comments</button>
                 ${item.status !== 'claimed' 
@@ -374,26 +369,17 @@
         // After rendering items, update comments count for each item
         (async () => {
             for (const item of filteredItems) {
-                try {
-                    let comments = await window.dataSdk.fetchComments(item.id);
-                    // If comments is undefined/null, fallback to empty array
-                    if (!comments) comments = [];
-                    // If comments is not array, try to convert
-                    if (!Array.isArray(comments)) {
-                        if (typeof comments === 'object' && 'data' in comments && Array.isArray(comments.data)) {
-                            comments = comments.data;
-                        } else {
-                            comments = [];
-                        }
+                let comments = await window.dataSdk.fetchComments(item.id);
+                if (!comments) comments = [];
+                if (!Array.isArray(comments)) {
+                    if (typeof comments === 'object' && 'data' in comments && Array.isArray(comments.data)) {
+                        comments = comments.data;
+                    } else {
+                        comments = [];
                     }
-                    // If still not array, fallback
-                    if (!Array.isArray(comments)) comments = [];
-                    const numSpan = document.getElementById(`comments-num-${item.id}`);
-                    if (numSpan) numSpan.textContent = comments.length;
-                } catch (err) {
-                    const numSpan = document.getElementById(`comments-num-${item.id}`);
-                    if (numSpan) numSpan.textContent = 0;
                 }
+                const numSpan = document.getElementById(`comments-num-${item.id}`);
+                if (numSpan) numSpan.textContent = comments.length;
             }
         })();
 
