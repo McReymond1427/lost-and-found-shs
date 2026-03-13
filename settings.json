@@ -1,7 +1,0 @@
-{
-  "typescript.preferences.includePackageJsonAutoImports": "auto",
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "typescript.suggest.autoImports": true,
-  "typescript.preferences.preferTypeOnlyAutoImports": true,
-  "typescript.preferences.useAliasesForRenames": true
-}
