@@ -259,8 +259,7 @@
                     <p class="${item.status === 'claimed' ? 'text-orange-400' : 'text-blue-400'}">✨ ${item.status}</p>
                 </div>
                 <div class="text-xs text-[#94a3b8] mb-3">
-                    <span class="font-medium">💬 ${item.comments?.length || 0}</span> comments
-                    ${item.comments?.length ? `<div class="mt-1 text-[11px] text-[#cbd5e1] line-clamp-2">"${item.comments[item.comments.length - 1].text}" — ${item.comments[item.comments.length - 1].author}</div>` : ''}
+                    <!-- Removed comment count design -->
                 </div>
                 <button onclick="showComments('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-[#475569] text-[#e2e8f0] hover:bg-[#6b7280] active:scale-95 transition-all">💬 See comments</button>
                 <div class="flex gap-2">
