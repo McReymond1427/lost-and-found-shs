@@ -88,13 +88,14 @@ window.dataSdk = {
     },
 
     // 2. Function para i-save ang bagong comment
-    createComment: async (itemId, author, text) => {
+    createComment: async (itemId, author, text, parentCommentId = null) => {
         const { data, error } = await supabaseClient
             .from('comments')
             .insert([{ 
                 item_id: itemId, 
                 author: author, 
-                text: text 
+                text: text, 
+                parent_comment_id: parentCommentId 
             }])
             .select();
 
