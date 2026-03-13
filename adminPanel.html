@@ -175,13 +175,32 @@
 
         async function showComments(itemId) {
             const comments = await window.dataSdk.fetchComments(itemId);
+            // Group comments by parent_comment_id
+            const topLevel = comments.filter(c => !c.parent_comment_id);
+            const replies = comments.filter(c => c.parent_comment_id);
+            function renderReplies(parentId) {
+                return replies.filter(r => r.parent_comment_id === parentId).map(r => `
+                    <div class="bg-[#475569] p-2 rounded-lg ml-4 mt-2">
+                        <p class="font-bold text-xs text-[#f8fafc]">${r.author}</p>
+                        <p class="text-xs text-gray-300">${r.text}</p>
+                        <p class="text-[10px] text-gray-500">${new Date(r.created_at).toLocaleString()}</p>
+                    </div>
+                `).join('');
+            }
             const commentsList = document.getElementById('comments-list');
-            commentsList.innerHTML = comments.length > 0 
-                ? `<div class="scroll-comments" style="max-height: 250px; overflow-y: auto;">${comments.map(c => `
+            commentsList.innerHTML = topLevel.length > 0 
+                ? `<div class="scroll-comments" style="max-height: 250px; overflow-y: auto;">${topLevel.map(c => `
             <div class="bg-[#334155] p-3 rounded-lg mb-2">
                 <p class="font-bold text-sm text-white">${c.author}</p>
                 <p class="text-sm text-gray-300">${c.text}</p>
                 <p class="text-[10px] text-gray-500">${new Date(c.created_at).toLocaleString()}</p>
+                <button class="reply-btn bg-[#475569] text-[#e2e8f0] px-2 py-1 rounded mt-2" onclick="showReplyForm('${c.id}')">Reply</button>
+                <div id="reply-form-${c.id}" class="hidden mt-2">
+                    <input type="text" id="reply-author-${c.id}" placeholder="Your name" class="w-full px-2 py-1 rounded bg-[#334155] border border-[#475569] text-[#f8fafc] mb-1">
+                    <textarea id="reply-text-${c.id}" placeholder="Write a reply..." rows="2" class="w-full px-2 py-1 rounded bg-[#334155] border border-[#475569] text-[#f8fafc] mb-1"></textarea>
+                    <button class="bg-[#22c55e] text-white px-2 py-1 rounded" onclick="addReply('${itemId}','${c.id}')">Post Reply</button>
+                </div>
+                ${renderReplies(c.id)}
             </div>
         `).join('')}</div>`
                 : '<p class="text-center text-gray-400 py-4">No comments yet.</p>';
