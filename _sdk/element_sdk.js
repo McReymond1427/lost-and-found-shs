@@ -2,7 +2,7 @@ const supabaseUrl = 'https://mugzzeulgpvqraatyyww.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11Z3p6ZXVsZ3B2cXJhYXR5eXd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNjU4NDAsImV4cCI6MjA4ODg0MTg0MH0.rkje-J36box9-ErTEcnFMHyd0t0wL5olDCyZNjXGd4Y';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-window.elementSdk = {
+window.dataSdk = {
     init: async ({ onDataChanged }) => {
         console.log("Supabase Data SDK Initialized");
 
