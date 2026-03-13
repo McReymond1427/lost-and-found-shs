@@ -14,6 +14,7 @@
 </head>
 
 <body class="h-full bg-[#0f172a] text-[#f8fafc]">
+    <!-- Admin panel container -->
     <div id="app" class="h-full overflow-auto">
         <header class="sticky top-0 z-40 bg-[#1e293b] border-b border-[#334155]">
             <div class="max-w-6xl mx-auto px-4 py-4">
@@ -98,10 +99,11 @@
     </div>
 
     <script>
+        // --- Admin UI state (filters/search) ---
         let currentAdminFilter = 'all';
         let currentAdminCategory = 'all';
         let currentAdminSearch = '';
-        let allAdminItems = [];
+        let allAdminItems = []; // cached items from the backend
 
         function setAdminFilter(filter) {
             currentAdminFilter = filter;
@@ -131,6 +133,33 @@
                 const success = await window.dataSdk.delete(itemId);
                 if (!success) alert("Failed to delete item.");
             }
+        }
+
+        async function addComment(itemId) {
+            const item = allAdminItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            const author = prompt('Enter your name for the comment:');
+            if (!author) return;
+
+            const text = prompt('Enter your comment:');
+            if (!text) return;
+
+            const newComment = {
+                author: author.trim(),
+                text: text.trim(),
+                createdAt: new Date().toISOString(),
+            };
+
+            const updatedItem = {
+                ...item,
+                comments: [
+                    ...(item.comments ?? []),
+                    newComment,
+                ],
+            };
+
+            await window.dataSdk.update(updatedItem);
         }
 
         function renderAdminItems(items) {
@@ -195,6 +224,11 @@
                     <p>📁 ${item.category || 'General'}</p>
                     <p class="${item.status === 'claimed' ? 'text-orange-400' : 'text-blue-400'}">✨ ${item.status}</p>
                 </div>
+                <div class="text-xs text-[#94a3b8] mb-3">
+                    <span class="font-medium">💬 ${item.comments?.length || 0}</span> comments
+                    ${item.comments?.length ? `<div class="mt-1 text-[11px] text-[#cbd5e1] line-clamp-2">"${item.comments[item.comments.length - 1].text}" — ${item.comments[item.comments.length - 1].author}</div>` : ''}
+                </div>
+                <button onclick="addComment('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-[#475569] text-[#e2e8f0] hover:bg-[#6b7280] active:scale-95 transition-all">💬 Add comment</button>
                 <div class="flex gap-2">
                     <button onclick="deleteItem('${item.id}')" class="flex-1 py-2 rounded-lg text-sm font-medium bg-[#ef4444]/10 text-[#ef4444] hover:bg-[#ef4444] hover:text-white transition-all">
                         🗑️ Remove
@@ -203,11 +237,6 @@
             </div>
                 `).join('');
             }
-
-            document.getElementById('total-count').textContent = items.length;
-            document.getElementById('lost-count').textContent = items.filter(i => i.type === 'lost').length;
-            document.getElementById('found-count').textContent = items.filter(i => i.type === 'found').length;
-            document.getElementById('claimed-count').textContent = items.filter(i => i.status === 'claimed').length;
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
