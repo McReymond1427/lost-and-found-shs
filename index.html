@@ -358,8 +358,8 @@
                     <p class="flex items-center gap-1">📅 <span>${new Date(item.date).toLocaleDateString()}</span></p>
                     <p class="flex items-center gap-1">📦 <span class="capitalize">${item.category || 'Other'}</span></p>
                 </div>
-                <div class="text-xs text-[#94a3b8] mb-3">
-                    <span class="font-medium">💬 ${item.comments?.length || 0}</span> comments
+                <div class="text-xs text-[#94a3b8] mb-3" id="comments-count-${item.id}">
+                    <span class="font-medium">💬 <span id="comments-num-${item.id}">0</span></span> comments
                     ${item.comments?.length ? `<div class="mt-1 text-[11px] text-[#cbd5e1] line-clamp-2">"${item.comments[item.comments.length - 1].text}" — ${item.comments[item.comments.length - 1].author}</div>` : ''}
                 </div>
                 <button onclick="showComments('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-[#475569] text-[#e2e8f0] hover:bg-[#6b7280] active:scale-95 transition-all">💬 See comments</button>
@@ -370,6 +370,13 @@
                 `).join('');
             }
         }
+
+        // After rendering items, update comments count for each item
+        filteredItems.forEach(async item => {
+            const comments = await window.dataSdk.fetchComments(item.id);
+            const numSpan = document.getElementById(`comments-num-${item.id}`);
+            if (numSpan) numSpan.textContent = comments.length;
+        });
 
         document.getElementById('user-post-form').addEventListener('submit', async (e) => {
             e.preventDefault();
