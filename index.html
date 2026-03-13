@@ -372,11 +372,19 @@
         }
 
         // After rendering items, update comments count for each item
-        filteredItems.forEach(async item => {
-            const comments = await window.dataSdk.fetchComments(item.id);
-            const numSpan = document.getElementById(`comments-num-${item.id}`);
-            if (numSpan) numSpan.textContent = comments.length;
-        });
+        (async () => {
+            for (const item of filteredItems) {
+                try {
+                    const comments = await window.dataSdk.fetchComments(item.id);
+                    const numSpan = document.getElementById(`comments-num-${item.id}`);
+                    if (numSpan) numSpan.textContent = Array.isArray(comments) ? comments.length : (comments?.data?.length || 0);
+                } catch (err) {
+                    // fallback: show 0
+                    const numSpan = document.getElementById(`comments-num-${item.id}`);
+                    if (numSpan) numSpan.textContent = 0;
+                }
+            }
+        })();
 
         document.getElementById('user-post-form').addEventListener('submit', async (e) => {
             e.preventDefault();
