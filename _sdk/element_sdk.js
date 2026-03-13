@@ -3,6 +3,7 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 window.dataSdk = {
+    // --- ELEMENT SDK ---
     init: async ({ onDataChanged }) => {
         console.log("Supabase Data SDK Initialized");
 
@@ -33,7 +34,6 @@ window.dataSdk = {
 
         return { isOk: true, unsubscribe: () => channel.unsubscribe() };
     },
-
     create: async (newItem) => {
         const { data, error } = await supabaseClient
             .from('items')
@@ -46,7 +46,6 @@ window.dataSdk = {
         }
         return data[0];
     },
-
     delete: async (itemId) => {
         const { error } = await supabaseClient
             .from('items')
@@ -54,5 +53,33 @@ window.dataSdk = {
             .eq('id', itemId); // Note: Use 'id' instead of '__backendId'
             
         return { isOk: !error };
+    },
+    // --- DATA SDK ---
+    update: async (updatedItem) => {
+        const { data, error } = await supabaseClient
+            .from('items')
+            .update(updatedItem)
+            .eq('id', itemId); // Note: Use 'id' instead of '__backendId'
+            
+        return { isOk: !error };
+    },
+    fetchComments: async (itemId) => {
+        const { data, error } = await supabaseClient
+            .from('comments')
+            .select('*')
+            .eq('item_id', itemId);
+            
+        return { data, error };
+    },
+    createComment: async (itemId, author, text) => {
+        const { data, error } = await supabaseClient
+            .from('comments')
+            .insert([{
+                item_id: itemId,
+                author: author,
+                text: text
+            }]);
+            
+        return { data, error };
     }
 };
