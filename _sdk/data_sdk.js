@@ -70,6 +70,39 @@ window.dataSdk = {
             .eq('id', itemId);
 
         return !error;
+    },
+
+    // 1. Function para kuhanin ang comments mula sa database
+    fetchComments: async (itemId) => {
+        const { data, error } = await supabaseClient
+            .from('comments')
+            .select('*')
+            .eq('item_id', itemId)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching comments:', error);
+            return [];
+        }
+        return data;
+    },
+
+    // 2. Function para i-save ang bagong comment
+    createComment: async (itemId, author, text) => {
+        const { data, error } = await supabaseClient
+            .from('comments')
+            .insert([{ 
+                item_id: itemId, 
+                author: author, 
+                text: text 
+            }])
+            .select();
+
+        if (error) {
+            console.error('Error creating comment:', error);
+            return null;
+        }
+        return data[0];
     }
 };
 
