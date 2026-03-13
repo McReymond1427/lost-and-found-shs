@@ -61,26 +61,17 @@ window.dataSdk = {
 
 
     create: async (newItem) => {
+    const { data, error } = await supabaseClient
+        .from('items')
+        .insert([newItem])
+        .select(); // This ensures Supabase returns the record it just created
 
-        const { error } = await supabaseClient
-
-            .from('items')
-
-            .insert([newItem]);
-
-
-
-        if (error) {
-
-            console.error('Error creating item:', error);
-
-            return null;
-
-        }
-
-        return newItem;
-
-    },
+    if (error) {
+        console.error('Error creating item:', error);
+        return null;
+    }
+    return data[0]; // Return the actual record from the database
+},
 
 
 
@@ -163,3 +154,4 @@ async function fetchItems() {
     return data || [];
 
 }
+
