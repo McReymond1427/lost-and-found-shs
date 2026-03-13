@@ -1,6 +1,29 @@
 <!doctype html>
 <html lang="en" class="h-full">
 <head>
+        <script>
+        window.showReplyForm = function(commentId) {
+            const form = document.getElementById(`reply-form-${commentId}`);
+            if (form) form.classList.toggle('hidden');
+        };
+
+        window.addReply = async function(itemId, parentCommentId) {
+            const authorInput = document.getElementById(`reply-author-${parentCommentId}`);
+            const textInput = document.getElementById(`reply-text-${parentCommentId}`);
+            let author = authorInput ? authorInput.value.trim() : '';
+            const text = textInput ? textInput.value.trim() : '';
+            if (!author) author = 'Admin';
+            if (!text) return;
+            const result = await window.dataSdk.createComment(itemId, author, text, parentCommentId);
+            if (result) {
+                textInput.value = '';
+                if (authorInput) authorInput.value = 'Admin';
+                await window.showComments(itemId);
+            } else {
+                alert('Failed to post reply. Please try again.');
+            }
+        };
+        </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Lost and Found Board</title>
@@ -14,29 +37,7 @@
 </head>
 
 <body class="h-full bg-[#0f172a] text-[#f8fafc]">
-    <script>
-    window.showReplyForm = function(commentId) {
-        const form = document.getElementById(`reply-form-${commentId}`);
-        if (form) form.classList.toggle('hidden');
-    };
-
-    window.addReply = async function(itemId, parentCommentId) {
-        const authorInput = document.getElementById(`reply-author-${parentCommentId}`);
-        const textInput = document.getElementById(`reply-text-${parentCommentId}`);
-        let author = authorInput ? authorInput.value.trim() : '';
-        const text = textInput ? textInput.value.trim() : '';
-        if (!author) author = 'Admin';
-        if (!text) return;
-        const result = await window.dataSdk.createComment(itemId, author, text, parentCommentId);
-        if (result) {
-            textInput.value = '';
-            if (authorInput) authorInput.value = 'Admin';
-            await window.showComments(itemId);
-        } else {
-            alert('Failed to post reply. Please try again.');
-        }
-    };
-    </script>
+    <!-- Admin panel container -->
     <!-- Admin panel container -->
     <div id="app" class="h-full overflow-auto">
         <header class="sticky top-0 z-40 bg-[#1e293b] border-b border-[#334155]">
