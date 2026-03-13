@@ -64,3 +64,21 @@ header {
 .admin-item-row {
     background: #1e293b;
 }
+
+.scroll-comments {
+  max-height: 250px;
+  overflow-y: auto;
+  scrollbar-color: #334155 #334155;
+  scrollbar-width: thin;
+  border: 1px solid #334155;
+}
+
+.scroll-comments::-webkit-scrollbar {
+  width: 8px;
+  background: #334155;
+}
+
+.scroll-comments::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
