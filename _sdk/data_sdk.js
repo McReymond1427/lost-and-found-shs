@@ -1,6 +1,3 @@
-// Ensure the Supabase library is loaded via CDN in your HTML first:
-// <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 const supabaseUrl = 'https://mugzzeulgpvqraatyyww.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11Z3p6ZXVsZ3B2cXJhYXR5eXd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNjU4NDAsImV4cCI6MjA4ODg0MTg0MH0.rkje-J36box9-ErTEcnFMHyd0t0wL5olDCyZNjXGd4Y'; // Your key here
 
@@ -89,5 +86,6 @@ async function fetchItems() {
     }
     return data || [];
 }
+
 
 
