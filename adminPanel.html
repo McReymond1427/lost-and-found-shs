@@ -98,6 +98,24 @@
         </main>
     </div>
 
+    <div id="comments-overlay" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60" onclick="closeComments()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-[#1e293b] rounded-lg shadow-lg max-h-[80vh] overflow-y-auto">
+            <div class="sticky top-0 p-4 border-b border-[#334155] flex items-center justify-between bg-[#1e293b] rounded-t-lg">
+                <h2 class="text-lg font-bold text-[#f8fafc]">💬 Comments</h2>
+                <button onclick="closeComments()" class="w-8 h-8 rounded-lg flex items-center justify-center bg-[#334155] text-[#f8fafc] hover:bg-[#475569]">✕</button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div id="comments-list" class="space-y-3"></div>
+                <form id="comment-form" class="space-y-3">
+                    <input type="text" id="comment-author" placeholder="Your name" required class="w-full px-3 py-2 rounded-lg bg-[#334155] border border-[#475569] text-[#f8fafc] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#f59e0b] focus:border-transparent">
+                    <textarea id="comment-text" placeholder="Write a comment..." required rows="3" class="w-full px-3 py-2 rounded-lg bg-[#334155] border border-[#475569] text-[#f8fafc] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#f59e0b] focus:border-transparent resize-none"></textarea>
+                    <button type="submit" class="w-full py-3 rounded-lg font-semibold bg-[#22c55e] text-white hover:bg-[#16a34a] transition-colors">Post Comment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- Admin UI state (filters/search) ---
         let currentAdminFilter = 'all';
@@ -136,14 +154,13 @@
         }
 
         async function addComment(itemId) {
-            const item = allAdminItems.find(i => i.id === itemId);
+            const item = allAdminItems.find(i => i.id == itemId);
             if (!item) return;
 
-            const author = prompt('Enter your name for the comment:');
-            if (!author) return;
+            const author = document.getElementById('comment-author').value;
+            const text = document.getElementById('comment-text').value;
 
-            const text = prompt('Enter your comment:');
-            if (!text) return;
+            if (!author || !text) return;
 
             const newComment = {
                 author: author.trim(),
@@ -160,6 +177,57 @@
             };
 
             await window.dataSdk.update(updatedItem);
+            showComments(itemId); // Refresh the comments
+            document.getElementById('comment-form').reset();
+        }
+
+        function showComments(itemId) {
+            const item = allAdminItems.find(i => i.id == itemId);
+            if (!item) return;
+
+            const commentsList = document.getElementById('comments-list');
+            commentsList.innerHTML = `
+                <div class="mb-6 p-4 bg-[#334155] rounded-lg border border-[#475569]">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="font-semibold text-[#f8fafc] text-lg">${item.name}</h3>
+                        <span class="text-xs uppercase tracking-wider px-2 py-1 rounded-md font-bold ${item.type === 'lost' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}">
+                            ${item.type}
+                        </span>
+                    </div>
+                    <p class="text-sm text-[#94a3b8] mb-4">${item.description}</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs text-[#64748b] mb-4 bg-[#1e293b]/50 p-2 rounded-lg">
+                        <p>📍 ${item.location}</p>
+                        <p>📅 ${new Date(item.date).toLocaleDateString()}</p>
+                        <p>📁 ${item.category || 'General'}</p>
+                        <p class="${item.status === 'claimed' ? 'text-orange-400' : 'text-blue-400'}">✨ ${item.status}</p>
+                        <p>👤 ${item.contact}</p>
+                    </div>
+                    <div class="text-xs text-[#94a3b8]">
+                        <span class="font-medium">💬 ${item.comments?.length || 0}</span> comments
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    ${item.comments && item.comments.length > 0 ? item.comments.map(comment => `
+                        <div class="bg-[#334155] p-3 rounded-lg">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-medium text-[#f8fafc]">${comment.author}</span>
+                                <span class="text-xs text-[#94a3b8]">${new Date(comment.createdAt).toLocaleString()}</span>
+                            </div>
+                            <p class="text-sm text-[#cbd5e1]">${comment.text}</p>
+                        </div>
+                    `).join('') : '<p class="text-[#94a3b8] text-center py-4">No comments yet. Be the first to comment!</p>'}
+                </div>
+            `;
+
+            document.getElementById('comments-overlay').classList.remove('hidden');
+            // Set the itemId for the form
+            document.getElementById('comment-form').dataset.itemId = itemId;
+            // Set default admin name
+            document.getElementById('comment-author').value = 'Admin';
+        }
+
+        function closeComments() {
+            document.getElementById('comments-overlay').classList.add('hidden');
         }
 
         function renderAdminItems(items) {
@@ -228,7 +296,7 @@
                     <span class="font-medium">💬 ${item.comments?.length || 0}</span> comments
                     ${item.comments?.length ? `<div class="mt-1 text-[11px] text-[#cbd5e1] line-clamp-2">"${item.comments[item.comments.length - 1].text}" — ${item.comments[item.comments.length - 1].author}</div>` : ''}
                 </div>
-                <button onclick="addComment('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-[#475569] text-[#e2e8f0] hover:bg-[#6b7280] active:scale-95 transition-all">💬 See comments</button>
+                <button onclick="showComments('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-[#475569] text-[#e2e8f0] hover:bg-[#6b7280] active:scale-95 transition-all">💬 See comments</button>
                 <div class="flex gap-2">
                     <button onclick="deleteItem('${item.id}')" class="flex-1 py-2 rounded-lg text-sm font-medium bg-[#ef4444]/10 text-[#ef4444] hover:bg-[#ef4444] hover:text-white transition-all">
                         🗑️ Remove
@@ -238,6 +306,12 @@
                 `).join('');
             }
         }
+
+        document.getElementById('comment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const itemId = e.target.dataset.itemId;
+            await addComment(itemId);
+        });
 
         window.addEventListener('DOMContentLoaded', async () => {
             await window.dataSdk.init({
