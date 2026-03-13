@@ -375,11 +375,18 @@
         (async () => {
             for (const item of filteredItems) {
                 try {
-                    const comments = await window.dataSdk.fetchComments(item.id);
+                    let comments = await window.dataSdk.fetchComments(item.id);
+                    // Handle possible object return from fetchComments
+                    if (comments && typeof comments === 'object' && !Array.isArray(comments)) {
+                        if ('data' in comments && Array.isArray(comments.data)) {
+                            comments = comments.data;
+                        } else {
+                            comments = [];
+                        }
+                    }
                     const numSpan = document.getElementById(`comments-num-${item.id}`);
-                    if (numSpan) numSpan.textContent = Array.isArray(comments) ? comments.length : (comments?.data?.length || 0);
+                    if (numSpan) numSpan.textContent = comments.length;
                 } catch (err) {
-                    // fallback: show 0
                     const numSpan = document.getElementById(`comments-num-${item.id}`);
                     if (numSpan) numSpan.textContent = 0;
                 }
