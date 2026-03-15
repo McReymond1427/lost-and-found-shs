@@ -341,7 +341,6 @@
         if (currentFilter === 'claimed') {
             filteredItems = filteredItems.filter(item => item.status === 'claimed');
         } else {
-            // Only show 'posted' items when looking for Lost/Found
             filteredItems = filteredItems.filter(item => item.type === currentFilter && item.status !== 'claimed');
         }
     }
@@ -361,7 +360,6 @@
         );
     }
 
-    // Update the Dashboard Counts
     document.getElementById('total-count').textContent = items.length;
     document.getElementById('lost-count').textContent = items.filter(i => i.type === 'lost' && i.status !== 'claimed').length;
     document.getElementById('found-count').textContent = items.filter(i => i.type === 'found' && i.status !== 'claimed').length;
@@ -387,10 +385,11 @@
                 </div>
                 <button onclick="showComments('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-[#475569] text-[#e2e8f0] hover:bg-[#6b7280] active:scale-95 transition-all">💬 See comments</button>
                 ${item.status !== 'claimed' 
-                    ? `<button onclick="claimItem('${item.id}')" class="w-full py-2 rounded-lg font-medium bg-[#f59e0b] text-[#0f172a] hover:bg-[#d97706] active:scale-95 transition-all">✅ Claim Item</button>` 
+                    ? `<button onclick="claimItem('${item.id}')" class="w-full py-2 rounded-lg font-medium bg-[#f59e0b] text-[#0f172a] hover:bg-[#d97706] active:scale-95 transition-all">✅ Claim Item</button>
+                       <button onclick="deleteItem('${item.id}')" class="w-full py-2 mt-2 rounded-lg font-medium bg-[#ef4444]/10 text-[#ef4444] hover:bg-[#ef4444] hover:text-white transition-all">🗑️ Remove</button>`
                     : `<div class="w-full py-2 text-center rounded-lg font-medium bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20">Claimed</div>`}
             </div>
-                `).join('');
+        `).join('');
             }
         }
 
@@ -491,4 +490,3 @@
     </script>
 </body>
 </html>
-
