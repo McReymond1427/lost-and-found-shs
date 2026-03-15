@@ -169,44 +169,72 @@
             });
         }
 
-        // UPDATED: Now uses 'id' instead of '__backendId'
-        async function deleteItem(itemId) {
-            const btn = document.querySelector(`button[onclick="deleteItem('${itemId}')"]`);
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = 'Removing...';
-            }
-            const success = await window.dataSdk.delete(itemId);
-            const isDeleted = typeof success === 'object' ? success.isOk : success;
-            if (!isDeleted) {
-                alert("Failed to delete item.");
+        // Add error handling for claim, comment, and delete
+        async function claimItem(itemId) {
+            try {
+                const item = allAdminItems.find(i => i.id === itemId);
+                if (!item || item.status === 'claimed') return;
+                const btn = document.querySelector(`button[onclick="claimItem('${itemId}')"]`);
                 if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = '🗑️ Remove';
+                    btn.disabled = true;
+                    btn.textContent = 'Claiming...';
                 }
-            } else {
-                allAdminItems = allAdminItems.filter(item => item.id !== itemId);
-                renderAdminItems(allAdminItems);
+                const updatedItem = { ...item, status: 'claimed' };
+                const result = await window.dataSdk.update(updatedItem);
+                const isClaimed = typeof result === 'object' ? result.isOk : !!result;
+                if (!isClaimed) {
+                    alert('Failed to claim item. Please try again.');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = '✅ Claim Item';
+                    }
+                }
+            } catch (err) {
+                alert('Error claiming item.');
             }
         }
 
         async function addComment(itemId) {
-            const authorInput = document.getElementById('comment-author');
-            const textInput = document.getElementById('comment-text');
+            try {
+                const authorInput = document.getElementById('comment-author');
+                const textInput = document.getElementById('comment-text');
+                const author = authorInput.value.trim();
+                const text = textInput.value.trim();
+                if (!author || !text) return;
+                const result = await window.dataSdk.createComment(itemId, author, text);
+                const isCommented = typeof result === 'object' ? !!result : !!result;
+                if (isCommented) {
+                    textInput.value = '';
+                    await showComments(itemId);
+                } else {
+                    alert('Hindi na-save ang comment. Subukan muli.');
+                }
+            } catch (err) {
+                alert('Error posting comment.');
+            }
+        }
 
-            const author = authorInput.value.trim();
-            const text = textInput.value.trim();
-
-            if (!author || !text) return;
-
-            // Gamitin ang bagong SDK function
-            const result = await window.dataSdk.createComment(itemId, author, text);
-
-            if (result) {
-                textInput.value = '';
-                await showComments(itemId);
-            } else {
-                alert("Hindi na-save ang comment. Subukan muli.");
+        async function deleteItem(itemId) {
+            try {
+                const btn = document.querySelector(`button[onclick="deleteItem('${itemId}')"]`);
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Removing...';
+                }
+                const success = await window.dataSdk.delete(itemId);
+                const isDeleted = typeof success === 'object' ? success.isOk : success;
+                if (!isDeleted) {
+                    alert('Failed to delete item.');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = '🗑️ Remove';
+                    }
+                } else {
+                    allAdminItems = allAdminItems.filter(item => item.id !== itemId);
+                    renderAdminItems(allAdminItems);
+                }
+            } catch (err) {
+                alert('Error deleting item.');
             }
         }
 
