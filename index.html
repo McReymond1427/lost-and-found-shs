@@ -106,14 +106,14 @@
                 <div class="p-4 space-y-4">
                     <form id="user-post-form" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Type</label>
+                            <label for="user-type" class="block text-sm font-medium mb-1 text-[#94a3b8]">Type</label>
                             <select id="user-type" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
                                 <option value="lost">🔴 I Lost Something</option>
                                 <option value="found">🟢 I Found Something</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Category</label>
+                            <label for="user-category" class="block text-sm font-medium mb-1 text-[#94a3b8]">Category</label>
                             <select id="user-category" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
                                 <option value="">Select Category</option>
                                 <option value="Electronics">📱 Electronics</option>
@@ -124,27 +124,27 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">What is it?</label>
+                            <label for="user-name" class="block text-sm font-medium mb-1 text-[#94a3b8]">What is it?</label>
                             <input type="text" id="user-name" required placeholder="e.g., Blue Water Bottle" class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Description</label>
+                            <label for="user-desc" class="block text-sm font-medium mb-1 text-[#94a3b8]">Description</label>
                             <textarea id="user-desc" required rows="2" class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 resize-none input-field"></textarea>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Where?</label>
+                            <label for="user-location" class="block text-sm font-medium mb-1 text-[#94a3b8]">Where?</label>
                             <input type="text" id="user-location" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Your Name</label>
+                            <label for="user-contact" class="block text-sm font-medium mb-1 text-[#94a3b8]">Your Name</label>
                             <input type="text" id="user-contact" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Phone Number</label>
+                            <label for="user-phone" class="block text-sm font-medium mb-1 text-[#94a3b8]">Phone Number</label>
                             <input type="tel" id="user-phone" required pattern="[0-9]{10,15}" placeholder="e.g., 09123456789" class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">Date</label>
+                            <label for="user-date" class="block text-sm font-medium mb-1 text-[#94a3b8]">Date</label>
                             <input type="date" id="user-date" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field">
                         </div>
                         <button type="submit" id="user-submit-btn" class="w-full py-3 rounded-lg font-semibold bg-[#22c55e] text-white"> 📝 Post to Board </button>
