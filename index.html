@@ -394,7 +394,27 @@
 
         // After rendering items, update comments count for each item
         (async () => {
-            for (const item of filteredItems) {
+            // Define filteredItems in this scope
+            let filteredItemsLocal = items;
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'claimed') {
+                    filteredItemsLocal = filteredItemsLocal.filter(item => item.status === 'claimed');
+                } else {
+                    filteredItemsLocal = filteredItemsLocal.filter(item => item.type === currentFilter && item.status !== 'claimed');
+                }
+            }
+            if (currentCategory !== 'all') {
+                filteredItemsLocal = filteredItemsLocal.filter(item => item.category === currentCategory);
+            }
+            if (currentSearch.trim() !== '') {
+                const searchTerm = currentSearch.toLowerCase();
+                filteredItemsLocal = filteredItemsLocal.filter(item => 
+                    item.name.toLowerCase().includes(searchTerm) ||
+                    item.description.toLowerCase().includes(searchTerm) ||
+                    item.location.toLowerCase().includes(searchTerm)
+                );
+            }
+            for (const item of filteredItemsLocal) {
                 let comments = await window.dataSdk.fetchComments(item.id);
                 if (!comments) comments = [];
                 if (!Array.isArray(comments)) {
