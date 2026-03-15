@@ -247,25 +247,25 @@
 
         // UPDATED: Uses 'id' instead of '__backendId'
         async function claimItem(itemId) {
-            const item = allItems.find(i => i.id === itemId);
-            if (item && item.status !== 'claimed') {
-                // Disable button
-                const btn = document.querySelector(`button[onclick="claimItem('${itemId}')"]`);
-                if (btn) {
-                    btn.disabled = true;
-                    btn.textContent = 'Claiming...';
-                }
-                const updatedItem = { ...item, status: 'claimed' };
-                const result = await window.dataSdk.update(updatedItem);
-                if (!result) {
-                    alert('Failed to claim item. Please try again.');
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.textContent = '✅ Claim Item';
-                    }
-                }
-            }
+    const item = allItems.find(i => i.id === itemId);
+    if (!item || item.status === 'claimed') return;
+    const btn = document.querySelector(`button[onclick="claimItem('${itemId}')"]`);
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Claiming...';
+    }
+    const updatedItem = { ...item, status: 'claimed' };
+    const result = await window.dataSdk.update(updatedItem);
+    if (!result) {
+        alert('Failed to claim item. Please try again.');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '✅ Claim Item';
         }
+    } else {
+        // UI will refresh automatically if onDataChanged is set up correctly
+    }
+}
 
         async function addComment(itemId) {
             const authorInput = document.getElementById('comment-author');
