@@ -247,6 +247,9 @@
         async function claimItem(itemId) {
     const item = allItems.find(i => i.id === itemId);
     if (!item || item.status === 'claimed') return;
+    // Show confirmation dialog
+    const confirmed = confirm('Sigurado ka bang nakuha mo na ang item na ito?');
+    if (!confirmed) return;
     const btn = document.querySelector(`button[onclick="claimItem('${itemId}')"]`);
     if (btn) {
         btn.disabled = true;
@@ -260,8 +263,6 @@
             btn.disabled = false;
             btn.textContent = '✅ Claim Item';
         }
-    } else {
-        // UI will refresh automatically if onDataChanged is set up correctly
     }
 }
 
