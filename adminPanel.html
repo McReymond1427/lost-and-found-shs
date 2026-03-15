@@ -216,6 +216,10 @@
 
         async function deleteItem(itemId) {
             const item = allAdminItems.find(i => i.id === itemId);
+            if (!item) {
+                alert("Item not found or already deleted.");
+                return;
+            }
             // Check if the item is claimed before allowing deletion
             if (item.status !== 'claimed') {
                 alert("Only claimed items can be deleted by an admin.");
