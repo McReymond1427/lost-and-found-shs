@@ -249,8 +249,21 @@
         async function claimItem(itemId) {
             const item = allItems.find(i => i.id === itemId);
             if (item && item.status !== 'claimed') {
+                // Disable button
+                const btn = document.querySelector(`button[onclick="claimItem('${itemId}')"]`);
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Claiming...';
+                }
                 const updatedItem = { ...item, status: 'claimed' };
-                await window.dataSdk.update(updatedItem);
+                const result = await window.dataSdk.update(updatedItem);
+                if (!result) {
+                    alert('Failed to claim item. Please try again.');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = '✅ Claim Item';
+                    }
+                }
             }
         }
 
