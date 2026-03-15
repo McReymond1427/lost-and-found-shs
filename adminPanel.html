@@ -171,9 +171,22 @@
 
         // UPDATED: Now uses 'id' instead of '__backendId'
         async function deleteItem(itemId) {
-            if (confirm('Are you sure you want to delete this item?')) {
-                const success = await window.dataSdk.delete(itemId);
-                if (!success) alert("Failed to delete item.");
+            const btn = document.querySelector(`button[onclick="deleteItem('${itemId}')"]`);
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Removing...';
+            }
+            const success = await window.dataSdk.delete(itemId);
+            if (!success) {
+                alert("Failed to delete item.");
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🗑️ Remove';
+                }
+            } else {
+                // Remove item from UI immediately
+                allAdminItems = allAdminItems.filter(item => item.id !== itemId);
+                renderAdminItems(allAdminItems);
             }
         }
 
