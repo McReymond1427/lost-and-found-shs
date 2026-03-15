@@ -215,28 +215,25 @@
         }
 
         async function deleteItem(itemId) {
-            try {
-                const btn = document.querySelector(`button[onclick="deleteItem('${itemId}')"]`);
-                if (btn) {
-                    btn.disabled = true;
-                    btn.textContent = 'Removing...';
-                }
-                const success = await window.dataSdk.delete(itemId);
-                const isDeleted = typeof success === 'object' ? success.isOk : success;
-                if (!isDeleted) {
-                    alert('Failed to delete item.');
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.textContent = '🗑️ Remove';
-                    }
-                } else {
+            const item = allAdminItems.find(i => i.id === itemId);
+            // Check if the item is claimed before allowing deletion
+            if (item.status !== 'claimed') {
+                alert("Only claimed items can be deleted by an admin.");
+                return;
+            }
+
+            if (confirm("Are you sure you want to permanently remove this claimed item?")) {
+                const result = await window.dataSdk.delete(itemId);
+                if (result.isOk) {
+                    alert("Item removed.");
                     allAdminItems = allAdminItems.filter(item => item.id !== itemId);
                     renderAdminItems(allAdminItems);
+                } else {
+                    alert('Failed to delete item.');
                 }
-            } catch (err) {
-                alert('Error deleting item.');
             }
         }
+        
 
         async function showComments(itemId) {
             const comments = await window.dataSdk.fetchComments(itemId);
