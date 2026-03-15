@@ -177,14 +177,14 @@
                 btn.textContent = 'Removing...';
             }
             const success = await window.dataSdk.delete(itemId);
-            if (!success) {
+            const isDeleted = typeof success === 'object' ? success.isOk : success;
+            if (!isDeleted) {
                 alert("Failed to delete item.");
                 if (btn) {
                     btn.disabled = false;
                     btn.textContent = '🗑️ Remove';
                 }
             } else {
-                // Remove item from UI immediately
                 allAdminItems = allAdminItems.filter(item => item.id !== itemId);
                 renderAdminItems(allAdminItems);
             }
