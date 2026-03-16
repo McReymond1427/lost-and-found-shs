@@ -64,12 +64,17 @@ window.dataSdk = {
     },
 
     delete: async (itemId) => {
-        const { error } = await supabaseClient
-            .from('items')
-            .delete()
-            .eq('id', itemId);
-
-        return !error;
+        try {
+            const { error } = await supabaseClient
+                .from('items')
+                .delete()
+                .eq('id', itemId);
+            if (error) throw error;
+            return { isOk: true };
+        } catch (error) {
+            console.error("Delete Error:", error);
+            return { isOk: false };
+        }
     },
 
     // 1. Function para kuhanin ang comments mula sa database
