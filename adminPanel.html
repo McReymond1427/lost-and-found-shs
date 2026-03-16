@@ -215,34 +215,37 @@
         }
 
         async function deleteItem(itemId) {
-            const item = allAdminItems.find(i => i.id === itemId);
-            if (!item) {
-                alert("Item not found or already deleted.");
-                return;
-            }
-            // Check if the item is claimed before allowing deletion
-            if (item.status !== 'claimed') {
-                alert("Only claimed items can be deleted by an admin.");
-                return;
-            }
+    if (!itemId) {
+        console.error("Walang ID na nakuha.");
+        return;
+    }
 
-            if (confirm("Are you sure you want to permanently remove this claimed item?")) {
-                const result = await window.dataSdk.delete(itemId);
-                if (result.isOk) {
-                    alert("Item removed.");
-                    allAdminItems = allAdminItems.filter(item => item.id !== itemId);
-                    renderAdminItems(allAdminItems);
-                } else {
-                    alert('Failed to delete item.');
-                }
+    if (confirm("Sigurado ka bang gusto mong burahin ang item na ito?")) {
+        try {
+            // Siguraduhin na window.dataSdk.delete ang tinatawag
+            const result = await window.dataSdk.delete(itemId);
+            
+            // I-check kung ang result ay object at may isOk property
+            const success = (result && typeof result === 'object') ? result.isOk : result === true;
+
+            if (success) {
+                alert("Item successfully removed.");
+                // Ang real-time subscription (onDataChanged) ang bahalang mag-update ng UI
+            } else {
+                console.error("Supabase Error:", result);
+                alert('Failed to delete item. Maaaring may RLS (Row Level Security) restriction sa iyong Supabase table.');
             }
+        } catch (error) {
+            console.error("Delete Error:", error);
+            alert("Nagkaroon ng error sa pag-delete.");
         }
-        
+    }
+}
 
         async function showComments(itemId) {
             const comments = await window.dataSdk.fetchComments(itemId);
             // Group comments by parent_comment_id
-            const topLevel = comments.filter(c => !c.parent_comment_id);
+            const topLevel = comments.filter(c => !c.parent_comment_id); 
             const replies = comments.filter(c => c.parent_comment_id);
             function renderReplies(parentId) {
                 return replies.filter(r => r.parent_comment_id === parentId).map(r => `
