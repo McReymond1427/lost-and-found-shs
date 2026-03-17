@@ -13,6 +13,8 @@
 </head>
 
 <body class="h-full">
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed bottom-6 right-6 z-50 hidden bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg text-base font-semibold transition-all duration-300"></div>
     <!-- Main app container for the Lost & Found board -->
     <div id="app" class="h-full overflow-auto">
         <header class="sticky top-0 z-40">
@@ -104,6 +106,12 @@
                     <button onclick="togglePostPanel()" class="w-8 h-8 rounded-lg flex items-center justify-center bg-[#334155] text-[#f8fafc]">✕</button>
                 </div>
                 <div class="p-4 space-y-4">
+                    <div id="post-success-message" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative flex flex-col items-center">
+                        <span class="text-3xl mb-2">✅</span>
+                        <span class="font-bold">Added Successfully!</span>
+                        <span>Your item has been posted to the board.</span>
+                        <button id="post-success-close" class="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Close</button>
+                    </div>
                     <form id="user-post-form" class="space-y-4">
                         <div>
                             <label for="user-type" class="block text-sm font-medium mb-1 text-[#94a3b8]">Type</label>
@@ -275,6 +283,11 @@
     // 2. UI Toggles
     function togglePostPanel() {
         document.getElementById('post-overlay').classList.toggle('hidden');
+        // Always reset success message and form visibility when opening the panel
+        if (!document.getElementById('post-overlay').classList.contains('hidden')) {
+            document.getElementById('post-success-message').classList.add('hidden');
+            document.getElementById('user-post-form').classList.remove('hidden');
+        }
     }
 
     function toggleAdminPanel() {
@@ -501,7 +514,89 @@ window.submitReply = async function(itemId, parentId) {
         }
     });
 
+    // Function para i-save ang bagong post (Lost or Found)
+    document.getElementById('user-post-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Kunin ang button para sa loading state
+        const submitBtn = document.getElementById('user-submit-btn');
+        const originalText = submitBtn.textContent;
+        
+        // Disable button para iwas double post
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Posting...";
+
+        const newItem = {
+            type: document.getElementById('user-type').value,
+            category: document.getElementById('user-category').value,
+            name: document.getElementById('user-name').value.trim(),
+            description: document.getElementById('user-desc').value.trim(),
+            location: document.getElementById('user-location').value.trim(),
+            contact: document.getElementById('user-contact').value.trim(),
+            phone: document.getElementById('user-phone').value.trim(),
+            date: document.getElementById('user-date').value,
+            status: 'active' // default status
+        };
+
+        try {
+            const result = await window.dataSdk.create(newItem);
+            
+            if (result) {
+                // 1. Linisin ang form
+                e.target.reset();
+                // 2. Show success message UI
+                document.getElementById('post-success-message').classList.remove('hidden');
+                document.getElementById('user-post-form').classList.add('hidden');
+            } else {
+                showToast("Failed to post item. Please try again.", true);
+            }
+        // Success message close button logic
+        document.getElementById('post-success-close').addEventListener('click', () => {
+            document.getElementById('post-success-message').classList.add('hidden');
+            document.getElementById('user-post-form').classList.remove('hidden');
+            togglePostPanel();
+        });
+        } catch (error) {
+            console.error("Submission error:", error);
+            showToast("An error occurred. Please check your connection.", true);
+        } finally {
+            // Toast notification function
+            function showToast(message, isError = false) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.className = `fixed bottom-6 right-6 z-50 px-6 py-3 rounded-lg shadow-lg text-base font-semibold transition-all duration-300 ${isError ? 'bg-red-500' : 'bg-green-500'} text-white`;
+                toast.classList.remove('hidden');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3000);
+            }
+            // Ibalik ang button sa dati
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+
     // Filters & Search
+    // Claim Item Function
+    async function claimItem(itemId) {
+        const item = allItems.find(i => String(i.id) === String(itemId));
+        if (!item) {
+            showToast('Item not found.', true);
+            return;
+        }
+        const updatedItem = { ...item, status: 'claimed' };
+        try {
+            const result = await window.dataSdk.update(updatedItem);
+            if (result) {
+                showToast('Item successfully claimed!');
+            } else {
+                showToast('Failed to claim item.', true);
+            }
+        } catch (error) {
+            showToast('Error claiming item.', true);
+            console.error(error);
+        }
+    }
     function setFilter(f) { currentFilter = f; renderItems(allItems); }
     function setCategory(c) { currentCategory = c; renderItems(allItems); }
 
