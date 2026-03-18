@@ -141,12 +141,14 @@
                         </div>
                         <!-- Image Choose UI -->
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-[#94a3b8]">📸 Photo (Optional)</label>
-                            <div class="relative">
-                                <input type="file" id="user-image" accept="image/*" class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 input-field file:hidden">
-                                <label for="user-image" class="absolute inset-0 w-full py-3 px-4 border-2 border-dashed border-[#475569] rounded-lg cursor-pointer hover:border-[#f59e0b] hover:bg-[#1e293b]/50 transition-all text-center text-[#94a3b8] text-sm flex items-center justify-center">
-                                    Click to choose image or drag & drop
-                                </label>
+<label class="block text-sm font-medium mb-1 text-[#94a3b8]">📸 Photo (Optional)</label>
+                            <div class="file-upload-container mt-1 w-full border-2 border-dashed border-[#475569] rounded-lg p-6 text-center cursor-pointer hover:border-[#f59e0b] hover:bg-[#1e293b]/30 transition-all bg-[#1e293b]/20">
+                                <input type="file" id="user-image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <div class="text-[#94a3b8] text-sm">
+                                    <div class="text-2xl mb-2">📸</div>
+                                    <div>Click to choose image or drag & drop</div>
+                                    <div class="text-xs mt-1">PNG, JPG up to 5MB</div>
+                                </div>
                             </div>
                             <div id="image-preview" class="mt-3 hidden bg-[#1e293b] rounded-lg p-3 border border-[#475569]">
                                 <img id="preview-img" alt="Preview" class="w-full h-48 object-cover rounded-lg mb-2">
