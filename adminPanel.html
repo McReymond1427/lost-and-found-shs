@@ -66,9 +66,24 @@
             console.error("Item not found in Admin list:", itemId);
             return;
         }
+        // Clear previous images first - broader selector for admin modal
+        const modalContent = document.querySelector('#comments-overlay .bg-[#334155]');
+        if (modalContent) {
+            const existingImgs = modalContent.querySelectorAll('img:not([alt="School Logo"])');
+            existingImgs.forEach(img => img.remove());
+        }
+        
         // I-fill ang Modal Details (The "Post" Part)
         document.getElementById('modal-item-name').textContent = item.name;
         document.getElementById('modal-item-category').textContent = `📂 Category: ${item.category}`;
+        if (item.image_url) {
+            const modalImg = document.createElement('img');
+            modalImg.src = item.image_url;
+            modalImg.className = 'w-full h-48 object-cover rounded-lg mb-4 shadow-md mx-auto';
+            modalImg.alt = item.name;
+            const descDiv = document.getElementById('modal-item-desc').parentNode;
+            descDiv.insertBefore(modalImg, document.getElementById('modal-item-desc'));
+        }
         document.getElementById('modal-item-desc').textContent = item.description;
         document.getElementById('modal-item-loc').textContent = item.location;
         document.getElementById('modal-item-date').textContent = new Date(item.date).toLocaleDateString();
@@ -278,6 +293,9 @@
             </div>
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div class="bg-[#334155] rounded-xl p-5 border border-[#475569]">
+                    <div id="modal-image-container" class="mb-4 hidden">
+                        <img id="modal-admin-img" class="w-full h-48 object-cover rounded-lg shadow-md mx-auto" alt="">
+                    </div>
                     <div class="mb-4">
                         <h1 id="modal-item-name" class="text-2xl font-bold text-[#f59e0b] mb-1"></h1>
                         <p id="modal-item-category" class="text-sm text-gray-400 font-medium"></p>
@@ -476,6 +494,7 @@
         emptyState.classList.add('hidden');
         grid.innerHTML = filteredItems.map(item => `
             <div class="rounded-xl p-4 bg-[#334155] border ${item.type === 'lost' ? 'border-red-500/20' : 'border-transparent'} hover:border-[#f59e0b] transition-all">
+                ${item.image_url ? `<img src="${item.image_url}" alt="${item.name}" class="w-full h-32 object-cover rounded-lg mb-3 shadow-md">` : ''}
                 <div class="flex items-start justify-between mb-2">
                     <h3 class="font-semibold text-[#f8fafc] line-clamp-1">${item.name}</h3>
                     <span class="text-[10px] uppercase font-bold px-2 py-1 rounded ${item.type === 'lost' ? 'bg-red-400/20 text-red-400' : 'bg-green-400/20 text-green-400'}">
