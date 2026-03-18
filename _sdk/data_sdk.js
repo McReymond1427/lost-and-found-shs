@@ -109,6 +109,17 @@ window.dataSdk = {
             return null;
         }
         return data[0];
+    },
+
+createTransaction: async (claimant_name, phone) => {
+        const { error } = await supabaseClient
+            .from('transaction')
+            .insert([{ claimant_name, phone }]);
+        if (error) {
+            console.warn('Transaction insert failed:', error.message);
+            return false;
+        }
+        return true;
     }
 };
 
@@ -128,5 +139,4 @@ async function fetchItems() {
     }
     return data || [];
 }
-
 
