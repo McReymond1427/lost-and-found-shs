@@ -98,6 +98,7 @@ header {
 /* Image Upload Styles */
 .file-upload-container {
     position: relative;
+    z-index: 10;
 }
 
 .file-upload-container input[type="file"] {
@@ -107,6 +108,7 @@ header {
     height: 100%;
     opacity: 0;
     cursor: pointer;
+    z-index: 20;
 }
 
 #image-preview img {
