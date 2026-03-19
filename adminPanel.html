@@ -248,14 +248,32 @@
                 </div>
             </div>
 
-            <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-                <button onclick="setAdminFilter('all')" data-filter="all" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#f59e0b] text-[#0f172a]"> All Items </button>
-                <button onclick="setAdminFilter('lost')" data-filter="lost" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 🔴 Lost </button>
-                <button onclick="setAdminFilter('found')" data-filter="found" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 🟢 Found </button>
-                <button onclick="setAdminFilter('claimed')" data-filter="claimed" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> ✅ Claimed </button>
+<div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                <button onclick="showSection('items')" class="admin-tab-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#f59e0b] text-[#0f172a]"> 📋 Items </button>
+                <button onclick="showSection('transactions')" id="transaction-tab-btn" class="admin-tab-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 💰 Transactions </button>
             </div>
 
-            <div id="admin-items-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+            <!-- Items Section -->
+            <div id="items-section" class="admin-section">
+                <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                    <button onclick="setAdminFilter('all')" data-filter="all" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#f59e0b] text-[#0f172a]"> All Items </button>
+                    <button onclick="setAdminFilter('lost')" data-filter="lost" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 🔴 Lost </button>
+                    <button onclick="setAdminFilter('found')" data-filter="found" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> 🟢 Found </button>
+                    <button onclick="setAdminFilter('claimed')" data-filter="claimed" class="admin-filter-btn px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-all bg-[#475569] text-[#e2e8f0]"> ✅ Claimed </button>
+                </div>
+                <div id="admin-items-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+            </div>
+
+            <!-- Transactions Section -->
+            <div id="transactions-section" class="admin-section hidden">
+                <input type="text" id="transaction-search" placeholder="🔍 Search transactions (name, phone)..." class="w-full px-4 py-3 rounded-lg bg-[#334155] border border-[#475569] text-[#f8fafc] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#f59e0b] mb-6">
+                <div id="transaction-grid" class="space-y-4"></div>
+                <div id="transaction-empty" class="text-center py-16 hidden">
+                    <div class="text-6xl mb-4">📋</div>
+                    <h3 class="text-xl font-semibold mb-2">No transactions yet</h3>
+                    <p class="text-[#94a3b8] text-sm">No claimed items. Claims appear here when users claim found items.</p>
+                </div>
+            </div>
 
             <div id="admin-empty-state" class="hidden text-center py-16">
                 <div class="text-6xl mb-4">📭</div>
@@ -333,6 +351,9 @@
         let currentAdminSearch = '';
         
 
+        let allTransactions = [];
+        let currentTransactionSearch = '';
+
         function setAdminFilter(filter) {
             currentAdminFilter = filter;
             renderAdminItems(allAdminItems);
@@ -353,6 +374,87 @@
                 btn.classList.toggle('bg-[#475569]', btn.dataset.category !== category);
                 btn.classList.toggle('text-[#e2e8f0]', btn.dataset.category !== category);
             });
+        }
+
+        window.loadTransactions = async () => {
+            const grid = document.getElementById('transaction-grid');
+            grid.innerHTML = '<div class="text-center py-8"><div class="inline-block w-8 h-8 border-4 rounded-full animate-spin border-[#f59e0b] border-t-transparent mx-auto mb-4"></div><p class="text-[#94a3b8]">Loading transactions...</p></div>';
+            try {
+                allTransactions = await window.dataSdk.fetchTransactions();
+                renderTransactions(allTransactions);
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                grid.innerHTML = '<p class="text-center text-red-400 py-8">Error loading transactions. Check console (F12).</p>';
+            }
+        };
+
+        function renderTransactions(transactions) {
+            const grid = document.getElementById('transaction-grid');
+            const emptyState = document.getElementById('transaction-empty');
+            let filtered = transactions;
+
+            if (currentTransactionSearch.trim()) {
+                const term = currentTransactionSearch.toLowerCase();
+                filtered = filtered.filter(t => 
+                    t.claimant_name.toLowerCase().includes(term) ||
+                    t.phone.includes(term) ||
+                    t.item_id.toString().includes(term)
+                );
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(t => `
+                <div class="transaction-card p-6 rounded-2xl bg-gradient-to-br from-[#1e293b]/50 to-[#334155] border border-green-500/30 shadow-xl hover:shadow-2xl hover:border-[#f59e0b]/50 transition-all duration-300">
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="font-bold text-xl text-[#f8fafc]">${t.claimant_name || 'N/A'}</h3>
+                        <span class="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">✅ Claimed</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
+                        <div>
+                            <p><span class="font-medium text-[#94a3b8]">📱 Phone:</span> <span class="font-semibold text-white">${t.phone || 'N/A'}</span></p>
+                            <p><span class="font-medium text-[#94a3b8]">📅 Claim Date:</span> <span class="font-semibold text-white">${t.created_at ? new Date(t.created_at).toLocaleString('fil-PH') : 'N/A'}</span></p>
+                        </div>
+                        <div class="border-l border-[#475569]/50 pl-4">
+                            <p><span class="font-medium text-[#94a3b8]">📦 Item ID:</span> <span class="font-mono bg-[#1e293b] px-2 py-1 rounded text-xs text-[#f59e0b]">${t.item_id || 'N/A'}</span></p>
+                            <p><span class="font-medium text-[#94a3b8]">💳 Trans ID:</span> <span class="font-mono text-xs text-gray-400">#${t.id}</span></p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 pt-3 border-t border-[#475569]/30">
+                        <button onclick="deleteTransaction('${t.id}')" class="w-full py-2 bg-red-500/90 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg">
+                            🗑️ Delete Record
+                        </button>
+                    </div>
+                    <div class="text-xs text-gray-400 text-center mt-2">Tap delete → Confirmation UI appears</div>
+                </div>
+            `).join('');
+        }
+
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-[#f59e0b]');
+                btn.classList.remove('text-[#0f172a]');
+                btn.classList.add('bg-[#475569]');
+                btn.classList.add('text-[#e2e8f0]');
+            });
+
+            if (section === 'items') {
+                document.getElementById('items-section').classList.remove('hidden');
+                document.querySelector('[onclick="showSection(\'items\')"]').classList.add('bg-[#f59e0b]');
+                document.querySelector('[onclick="showSection(\'items\')"]').classList.add('text-[#0f172a]');
+                renderAdminItems(allAdminItems);
+            } else if (section === 'transactions') {
+                document.getElementById('transactions-section').classList.remove('hidden');
+                document.querySelector('[onclick="showSection(\'transactions\')"]').classList.add('bg-[#f59e0b]');
+                document.querySelector('[onclick="showSection(\'transactions\')"]').classList.add('text-[#0f172a]');
+                loadTransactions();
+            }
         }
 
         // Add error handling for claim, comment, and delete
@@ -510,8 +612,9 @@
                     🔍 View Post & Comments
                 </button>
                 <button onclick="deleteItem('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-red-500 text-white hover:bg-red-600 transition-all">
-                    🗑️ Delete
+                    🗑️ Delete Item
                 </button>
+                <div class="text-xs text-gray-400 text-center mt-1">Confirmation modal will show</div>
                 ${item.status === 'claimed' 
                     ? `<button disabled class="w-full py-2 rounded-lg font-medium bg-gray-600 text-white cursor-not-allowed">✅ Claimed</button>`
                     : item.type === 'lost'
@@ -549,21 +652,43 @@
                         confirmBtn.addEventListener('click', async () => {
                             if (isDeleting) return;
                             isDeleting = true;
-                            const itemId = modal.dataset.itemId;
+                            confirmBtn.disabled = true;
+                            confirmBtn.textContent = 'Deleting...';
+                            cancelBtn.disabled = true;
+                            const id = modal.dataset.itemId;
+                            const isTransaction = modal.dataset.isTransaction === 'true';
+                            
                             try {
-                                const result = await window.dataSdk.delete(itemId);
-                                const success = (result && typeof result === 'object') ? result.isOk : result === true;
-                                if (success) {
-                                    // Optionally show a toast or message here
+                                let result;
+                                if (isTransaction) {
+                                    result = await window.dataSdk.deleteTransaction(id);
+                                    if (result?.success) {
+                                        alert('✅ Transaction deleted successfully!');
+                                        loadTransactions();
+                                    } else {
+                                        const errMsg = result?.error || 'Unknown error';
+                                        console.error('Transaction delete failed:', errMsg);
+                                        alert(`❌ Failed to delete transaction: ${errMsg}\n\n💡 Check console (F12) or Supabase RLS policies.`);
+                                    }
                                 } else {
-                                    alert('Failed to delete item. There may be a restriction on your Supabase table.');
+                                    result = await window.dataSdk.delete(id);
+                                    if (result?.isOk) {
+                                        alert('✅ Item deleted successfully!');
+                                        renderAdminItems(allAdminItems);
+                                    } else {
+                                        alert(`❌ Failed to delete item. Check console.`);
+                                    }
                                 }
                             } catch (error) {
                                 console.error("Delete Error:", error);
-                                alert("There was an error deleting the item.");
+                                alert("❌ Delete operation failed. Check console (F12).");
+                            } finally {
+                                modal.classList.add('hidden');
+                                isDeleting = false;
+                                confirmBtn.disabled = false;
+                                confirmBtn.textContent = 'Delete';
+                                cancelBtn.disabled = false;
                             }
-                            modal.classList.add('hidden');
-                            isDeleting = false;
                         });
                         cancelBtn.addEventListener('click', () => {
                             modal.classList.add('hidden');
@@ -574,14 +699,90 @@
                     renderAdminItems(data);
                 }
             });
-            document.getElementById('admin-search').addEventListener('input', (e) => {
-                currentAdminSearch = e.target.value;
-                renderAdminItems(allAdminItems);
+            // Transaction search listener
+            document.getElementById('transaction-search').addEventListener('input', (e) => {
+                currentTransactionSearch = e.target.value;
+                renderTransactions(allTransactions);
             });
+
+            // Auto-load transactions tab on first click
+            window.addEventListener('transactionChanged', loadTransactions);
+
+            // Default to Items tab
+            showSection('items');
         });
+
+        // Placeholder functions for transaction buttons (implement later)
+        window.deleteTransaction = async (transId) => {
+            // Reuse existing delete modal for transactions
+            const trans = allTransactions.find(t => t.id === transId);
+            if (!trans) {
+                alert('Transaction not found.');
+                return;
+            }
+            
+            // Show delete modal with transaction details
+            const modal = document.getElementById('delete-modal');
+            modal.querySelector('h2').textContent = 'Delete Transaction';
+            modal.querySelector('p').innerHTML = `Delete transaction for <strong>${trans.claimant_name}</strong> (${trans.phone})?`;
+            modal.dataset.itemId = transId; // Reuse for transId
+            modal.dataset.isTransaction = 'true';
+            modal.classList.remove('hidden');
+        };
+
+        window.showTransactionDetails = async (transId) => {
+            const trans = allTransactions.find(t => t.id === transId);
+            if (!trans) return alert('Transaction not found.');
+
+            // Find item in global list
+            const item = allAdminItems.find(i => String(i.id) === String(trans.item_id));
+            
+            if (!item) {
+                alert('Item details not found. Check item_id: ' + trans.item_id);
+                return;
+            }
+
+            // Fill existing modal with ITEM + CLAIMANT info
+            document.getElementById('modal-item-name').textContent = item.name;
+            document.getElementById('modal-item-category').textContent = `📂 ${item.category}`;
+            
+            // Add claimant info to description area
+            const claimantInfo = `
+                <div class="bg-green-500/20 p-4 rounded-xl border border-green-400/50 mb-4">
+                    <h4 class="font-bold text-lg text-green-300 mb-2">✅ CLAIMANT DETAILS</h4>
+                    <p><strong>Name:</strong> ${trans.claimant_name || 'N/A'}</p>
+                    <p class="text-green-200"><strong>📱 Phone:</strong> ${trans.phone || 'N/A'}</p>
+                    <p class="text-xs text-green-300 mt-1"><strong>Claimed:</strong> ${new Date(trans.created_at).toLocaleString('fil-PH')}</p>
+                </div>
+            `;
+            document.getElementById('modal-item-desc').innerHTML = claimantInfo + (item.description || 'No description');
+            
+            document.getElementById('modal-item-loc').textContent = item.location || 'N/A';
+            document.getElementById('modal-item-date').textContent = new Date(item.date || item.created_at).toLocaleDateString('fil-PH');
+            document.getElementById('modal-item-contact').textContent = item.contact || 'N/A';
+            document.getElementById('modal-item-phone').textContent = item.phone || 'N/A';
+            document.getElementById('modal-item-phone').href = `tel:${item.phone || ''}`;
+            
+            // Item image
+            if (item.image_url) {
+                const imgContainer = document.getElementById('modal-image-container');
+                imgContainer.classList.remove('hidden');
+                document.getElementById('modal-admin-img').src = item.image_url;
+            }
+
+            const badge = document.getElementById('modal-status-badge');
+            badge.className = `text-[10px] uppercase font-bold px-2 py-1 rounded-full bg-green-500/30 text-green-400`;
+            badge.textContent = 'CLAIMED';
+
+            // Open modal
+            document.getElementById('comments-overlay').classList.remove('hidden');
+            document.getElementById('comment-form').dataset.itemId = item.id;
+            
+            // Load comments for item
+            await refreshCommentsList(item.id);
+        };
     </script>
 </body>
 </html>
-
 
 
