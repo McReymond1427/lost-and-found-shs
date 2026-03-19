@@ -669,17 +669,18 @@ window.confirmClaim = async () => {
             ...item, 
             status: 'claimed'
         };
-// Always save to transaction first
-        const transactionSaved = await window.dataSdk.createTransaction(claimantName, claimantPhone);
+        // Always save to transaction first - CORRECT order: item_id, name, phone
+        const transactionSaved = await window.dataSdk.createTransaction(itemId, claimantName, claimantPhone);
+        console.log('Transaction saved:', transactionSaved);
         // Then update item status
         const result = await window.dataSdk.update(updatedItem);
-        if (result) {
+        if (result && transactionSaved) {
             window.showToast('Item claimed successfully!');
             document.getElementById('claim-modal').classList.add('hidden');
             document.getElementById('claimant-name').value = '';
             document.getElementById('claimant-phone').value = '';
         } else {
-            window.showToast('Item update failed. Try again.', true);
+            window.showToast('Claim failed. Check console.', true);
         }
     };
 
