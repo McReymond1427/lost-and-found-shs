@@ -111,15 +111,76 @@ window.dataSdk = {
         return data[0];
     },
 
-createTransaction: async (claimant_name, phone) => {
-        const { error } = await supabaseClient
+createTransaction: async (item_id, claimant_name, phone) => {
+        console.log('Creating transaction:', { item_id, claimant_name, phone });
+        const { data, error } = await supabaseClient
             .from('transaction')
-            .insert([{ claimant_name, phone }]);
+            .insert([{ 
+                item_id, 
+                claimant_name, 
+                phone 
+            }])
+            .select();
         if (error) {
-            console.warn('Transaction insert failed:', error.message);
+            console.error('🚨 Transaction insert failed:', error.message);
             return false;
         }
-        return true;
+        console.log('✅ Transaction created:', data[0]);
+        return data[0];
+    },
+
+    fetchTransactions: async () => {
+        try {
+            const { data, error } = await supabaseClient
+                .from('transaction')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) {
+                console.error('🚨 Transactions fetch ERROR:', error.message, error.details);
+                return [];
+            }
+            console.log('✅ Fetched transactions:', data?.length || 0);
+            if (data && data.length > 0) {
+                console.log('📊 Sample:', data[0]);
+            }
+            return data || [];
+        } catch (err) {
+            console.error('❌ Fetch transactions exception:', err);
+            return [];
+        }
+    },
+
+    deleteTransaction: async (transId) => {
+        console.log('🗑️ Deleting transaction ID:', transId);
+        try {
+            // First verify record exists
+            const { data: existing } = await supabaseClient
+                .from('transaction')
+                .select('id')
+                .eq('id', transId)
+                .single();
+            
+            if (!existing) {
+                console.warn('⚠️ Transaction not found:', transId);
+                return { success: false, error: 'Record not found' };
+            }
+            
+            const { error } = await supabaseClient
+                .from('transaction')
+                .delete()
+                .eq('id', transId);
+                
+            if (error) {
+                console.error('🚨 Delete error:', error.message, error.details, error.hint);
+                return { success: false, error: error.message || 'Delete failed' };
+            }
+            
+            console.log('✅ Transaction deleted:', transId);
+            return { success: true };
+        } catch (err) {
+            console.error('❌ Delete exception:', err);
+            return { success: false, error: err.message };
+        }
     }
 };
 
@@ -139,4 +200,3 @@ async function fetchItems() {
     }
     return data || [];
 }
-
