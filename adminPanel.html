@@ -267,9 +267,6 @@
             <!-- Transactions Section -->
             <div id="transactions-section" class="admin-section hidden">
                 <input type="text" id="transaction-search" placeholder="🔍 Search transactions (name, phone)..." class="w-full px-4 py-3 rounded-lg bg-[#334155] border border-[#475569] text-[#f8fafc] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#f59e0b] mb-6">
-                <button onclick="clearAllTransactions()" class="mb-4 px-6 py-3 bg-red-500/90 hover:bg-red-600 text-white rounded-xl font-bold shadow-lg transition-all w-full">
-                    🧹 Clear All History
-                </button>
                 <div id="transaction-grid" class="space-y-4"></div>
                 <div id="transaction-empty" class="text-center py-16 hidden">
                     <div class="text-6xl mb-4">📋</div>
@@ -391,25 +388,6 @@
             }
         };
 
-        window.clearAllTransactions = async () => {
-            if (!confirm('Delete ALL transactions? This cannot be undone!')) return;
-            
-            const btn = event.target;
-            btn.disabled = true;
-            btn.textContent = 'Clearing...';
-            
-            const result = await window.dataSdk.clearAllTransactions();
-            if (result.success) {
-                alert('✅ All transactions cleared!');
-                window.loadTransactions();
-            } else {
-                alert('❌ Clear failed: ' + result.error);
-            }
-            
-            btn.disabled = false;
-            btn.textContent = '🧹 Clear All History';
-        };
-
         function renderTransactions(transactions) {
             const grid = document.getElementById('transaction-grid');
             const emptyState = document.getElementById('transaction-empty');
@@ -447,8 +425,11 @@
                         </div>
                     </div>
                     <div class="flex gap-3 pt-3 border-t border-[#475569]/30">
-                        <!-- Delete button removed per request -->
+                        <button onclick="deleteTransaction('${t.id}')" class="w-full py-2 bg-red-500/90 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg">
+                            🗑️ Delete Record
+                        </button>
                     </div>
+                    <div class="text-xs text-gray-400 text-center mt-2">Tap delete → Confirmation UI appears</div>
                 </div>
             `).join('');
         }
@@ -633,7 +614,7 @@
                 <button onclick="deleteItem('${item.id}')" class="w-full py-2 mb-2 rounded-lg font-medium bg-red-500 text-white hover:bg-red-600 transition-all">
                     🗑️ Delete Item
                 </button>
-                <!-- Text removed per request -->
+                <div class="text-xs text-gray-400 text-center mt-1">Confirmation modal will show</div>
                 ${item.status === 'claimed' 
                     ? `<button disabled class="w-full py-2 rounded-lg font-medium bg-gray-600 text-white cursor-not-allowed">✅ Claimed</button>`
                     : item.type === 'lost'
@@ -803,5 +784,4 @@
     </script>
 </body>
 </html>
-
 
